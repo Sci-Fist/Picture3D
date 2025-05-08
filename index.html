@@ -1,32 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <title>Photo Voyager</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="app-container">
-        <div id="controls-container">
-            <input type="file" id="folder-selector" webkitdirectory directory multiple />
-            <button id="clear-selection">Clear Selection</button>
-            <div id="loading-indicator" style="display: none;">Loading...</div>
+    <head>
+        <title>Photo Voyager</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <div id="app-container">
+            <div id="controls-container">
+                <input
+                    type="file"
+                    id="folder-selector"
+                    webkitdirectory
+                    directory
+                    multiple
+                />
+                <button id="clear-selection">Clear Selection</button>
+                <div id="loading-indicator" style="display: none">
+                    Loading...
+                </div>
+            </div>
+            <div id="3d-container"></div>
+            <div id="photo-preview" style="display: none">
+                <img id="preview-image" src="" alt="Photo Preview" />
+                <div id="metadata-display"></div>
+                <button id="close-preview">Close</button>
+            </div>
         </div>
-        <div id="3d-container"></div>
-        <div id="photo-preview" style="display: none;">
-            <img id="preview-image" src="" alt="Photo Preview">
-            <div id="metadata-display"></div>
-            <button id="close-preview">Close</button>
-        </div>
-    </div>
 
-    <script src="js/lib/three.module.js"></script>
-    <script src="js/fileLoader.js"></script>
-    <script src="js/metadataParser.js"></script>
-    <script src="js/dataManager.js"></script>
-    <script src="js/threeSceneManager.js"></script>
-    <script src="js/visualizationManager.js"></script>
-    <script src="js/navigationControls.js"></script>
-    <script src="js/uiHandler.js"></script>
-    <script src="main.js"></script>
-</body>
+        <script src="js/lib/three.module.js"></script>
+        <script src="js/fileLoader.js"></script>
+        <script src="js/metadataParser.js"></script>
+        <script src="js/dataManager.js"></script>
+        <script src="js/threeSceneManager.js"></script>
+        <script src="js/visualizationManager.js"></script>
+        <script src="js/navigationControls.js"></script>
+        <script src="js/uiHandler.js"></script>
+        <script src="main.js"></script>
+    </body>
 </html>
