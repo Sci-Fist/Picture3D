@@ -5,12 +5,12 @@ import { NavigationControls } from './js/navigationControls.js';
 import { VisualizationManager } from './js/visualizationManager.js';
 import { DataManager } from './js/dataManager.js';
 
-// Initialize Three.js scene
+// Set up the Three.js scene
 const threeSceneManager = new ThreeSceneManager();
 const container = document.getElementById('3d-container');
 threeSceneManager.init(container);
 
-// Initialize UI Handler and bind file selector
+// Set up UI and bind file selector
 const uiHandler = new UIHandler();
 uiHandler.init();
 
