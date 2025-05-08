@@ -1,10 +1,9 @@
 // js\metadataParser.js
 
 // Fix: Removed import statement.
-// Based on repeated SyntaxErrors, the library './lib/exifreader.js'
-// likely does not use standard ES Module exports. It is probably
-// expected to be included via a <script> tag and exposes a global variable,
-// most likely named 'ExifReader'.
+// Based on repeated SyntaxErrors and the library's source, the library './lib/exifreader.js'
+// does not use standard ES Module exports. It is expected to be included
+// via a <script> tag and exposes a global variable, most likely named 'ExifReader'.
 
 class MetadataParser {
   async parseMetadata(file) {
@@ -13,7 +12,8 @@ class MetadataParser {
 
       // --- Critical Check ---
       // Verify that the global 'ExifReader' variable exists and has a 'load' function.
-      // This confirms the library script was loaded correctly.
+      // This confirms the library script was loaded correctly via a <script> tag.
+      // If this check fails, the issue is with loading the exifreader.js script.
       if (
         typeof ExifReader === "undefined" ||
         typeof ExifReader.load !== "function"
@@ -22,9 +22,9 @@ class MetadataParser {
           "ExifReader library not loaded or 'load' function not found.",
         );
         console.error(
-          "Ensure './lib/exifreader.js' is loaded via a <script> tag BEFORE this script.",
+          "Ensure './lib/exifreader.js' is loaded via a <script> tag BEFORE any script that uses MetadataParser.",
         );
-        // Throw an error to stop processing this file as metadata parsing is not possible
+        // Throw a specific error to indicate the dependency is missing
         throw new Error(
           "ExifReader library or load function not available globally.",
         );
@@ -32,6 +32,7 @@ class MetadataParser {
       // --- End Critical Check ---
 
       // Now call the global ExifReader.load function
+      // Based on the source, ExifReader.load should be the correct function
       const tags = ExifReader.load(buffer);
 
       const metadata = {
@@ -43,14 +44,19 @@ class MetadataParser {
 
       return metadata;
     } catch (error) {
-      // Log the specific error that occurred during parsing (including the new check failure)
-      console.error("Error parsing metadata:", error.message || error);
+      // Log the specific error that occurred during parsing
+      console.error(
+        "Error parsing metadata for file:",
+        file.name,
+        ":",
+        error.message || error,
+      );
       // You might want to log the original error object for more details if needed
       // console.error("Original error object:", error);
 
       // Decide how to handle the failure - returning null means the file is processed
       // but no metadata is attached. Throwing the error would stop processing this file.
-      // Returning null matches your original code structure.
+      // Returning null matches your original code structure and allows other files to load.
       return null;
     }
   }
@@ -63,11 +69,13 @@ class MetadataParser {
         return tags.DateTimeOriginal.description; // Formatted date string
       }
       if (tags.DateTimeOriginal.value) {
-        // Fallback to value, convert array to string if necessary
-        // ExifReader value is often an array of characters for strings
+        // Fallback to value, convert array of characters to string if necessary
+        // ExifReader value for strings is often an array of numeric character codes
         return Array.isArray(tags.DateTimeOriginal.value)
-          ? tags.DateTimeOriginal.value.join("")
-          : tags.DateTimeOriginal.value;
+          ? tags.DateTimeOriginal.value
+              .map((code) => String.fromCharCode(code))
+              .join("")
+          : tags.DateTimeOriginal.value; // Should be a string or number otherwise
       }
     }
     return null;
@@ -79,8 +87,9 @@ class MetadataParser {
         return tags.Make.description;
       }
       if (tags.Make.value) {
+        // Join character codes into a string
         return Array.isArray(tags.Make.value)
-          ? tags.Make.value.join("")
+          ? tags.Make.value.map((code) => String.fromCharCode(code)).join("")
           : tags.Make.value;
       }
     }
@@ -93,13 +102,16 @@ class MetadataParser {
         return tags.Model.description;
       }
       if (tags.Model.value) {
+        // Join character codes into a string
         return Array.isArray(tags.Model.value)
-          ? tags.Model.value.join("")
+          ? tags.Model.value.map((code) => String.fromCharCode(code)).join("")
           : tags.Model.value;
       }
     }
     return null;
   }
+
+  // Add other extraction methods here as needed for other tags
 }
 
 export { MetadataParser };
