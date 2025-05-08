@@ -17,13 +17,17 @@ uiHandler.init();
 const dataManager = new DataManager();
 const fileLoader = new FileLoader();
 
-uiHandler.bindFileSelector(async (files) => {
-    uiHandler.showLoading("Scanning photos...");
-    await fileLoader.readFiles(files, dataManager, uiHandler);
-    uiHandler.hideLoading();
-
+async function startVisualization() {
     // Initialize VisualizationManager after files are loaded
     visualizationManager.updateScene(dataManager, threeSceneManager, threeSceneManager.getCamera());
+}
+
+uiHandler.bindFileSelector(async (files) => { // Added async
+    uiHandler.showLoading("Scanning photos...");
+    await fileLoader.readFiles(files, dataManager, uiHandler, startVisualization);
+    // uiHandler.hideLoading();  // No longer needed, handled in fileLoader
+
+
 });
 
 // Initialize navigation controls
