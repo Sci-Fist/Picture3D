@@ -1,49 +1,38 @@
 // js\metadataParser.js
 
-// Attempt 5: Go back to namespace import, but try accessing the default export
-// within the namespace object. This is a guess based on the observed behavior
-// where 'import * as' works initially (no SyntaxError) but standard named/default
-// imports fail with SyntaxErrors. The default export is a common place for
-// the main functionality to be located on the namespace object.
-import * as ExifReaderModule from "./lib/exifreader.js"; // Use a distinct name for the namespace object
+// Fix: Removed import statement.
+// Based on repeated SyntaxErrors, the library './lib/exifreader.js'
+// likely does not use standard ES Module exports. It is probably
+// expected to be included via a <script> tag and exposes a global variable,
+// most likely named 'ExifReader'.
 
 class MetadataParser {
   async parseMetadata(file) {
     try {
       const buffer = await file.arrayBuffer();
 
-      // --- Debugging Step: Inspect the imported module to understand its structure ---
-      // console.log('--- Debugging ExifReader Import ---');
-      // console.log('ExifReaderModule:', ExifReaderModule);
-      // console.log('ExifReaderModule.default:', ExifReaderModule.default);
-      // console.log('typeof ExifReaderModule.default:', typeof ExifReaderModule.default);
-      // if (ExifReaderModule.default && typeof ExifReaderModule.default === 'object') {
-      //    console.log('ExifReaderModule.default.load:', ExifReaderModule.default.load);
-      //    console.log('typeof ExifReaderModule.default.load:', typeof ExifReaderModule.default.load);
-      // }
-      // console.log('-----------------------------------');
-      // Remove or comment out these console logs after you understand the structure
-
-      // Try accessing load on the default property of the namespace object.
-      // This is a common place for the main function if a default export exists
-      // or is simulated by the module bundling process, even if direct default
-      // import failed with a SyntaxError.
+      // --- Critical Check ---
+      // Verify that the global 'ExifReader' variable exists and has a 'load' function.
+      // This confirms the library script was loaded correctly.
       if (
-        !ExifReaderModule.default ||
-        typeof ExifReaderModule.default.load !== "function"
+        typeof ExifReader === "undefined" ||
+        typeof ExifReader.load !== "function"
       ) {
-        // If this path is still wrong, throw a more specific error or handle
         console.error(
-          "ExifReader.load function not found on the default export of the imported module.",
+          "ExifReader library not loaded or 'load' function not found.",
         );
         console.error(
-          "Check the file './lib/exifreader.js' and how it exports the load function.",
+          "Ensure './lib/exifreader.js' is loaded via a <script> tag BEFORE this script.",
         );
-        // Fallback or re-throw error if needed
-        throw new Error("Could not find ExifReader.load function.");
+        // Throw an error to stop processing this file as metadata parsing is not possible
+        throw new Error(
+          "ExifReader library or load function not available globally.",
+        );
       }
+      // --- End Critical Check ---
 
-      const tags = ExifReaderModule.default.load(buffer);
+      // Now call the global ExifReader.load function
+      const tags = ExifReader.load(buffer);
 
       const metadata = {
         date: this.extractDate(tags),
@@ -54,9 +43,15 @@ class MetadataParser {
 
       return metadata;
     } catch (error) {
-      console.error("Error parsing metadata:", error);
-      // Propagate the error or handle it appropriately
-      return null; // Returning null as per your original code structure
+      // Log the specific error that occurred during parsing (including the new check failure)
+      console.error("Error parsing metadata:", error.message || error);
+      // You might want to log the original error object for more details if needed
+      // console.error("Original error object:", error);
+
+      // Decide how to handle the failure - returning null means the file is processed
+      // but no metadata is attached. Throwing the error would stop processing this file.
+      // Returning null matches your original code structure.
+      return null;
     }
   }
 
@@ -69,8 +64,9 @@ class MetadataParser {
       }
       if (tags.DateTimeOriginal.value) {
         // Fallback to value, convert array to string if necessary
+        // ExifReader value is often an array of characters for strings
         return Array.isArray(tags.DateTimeOriginal.value)
-          ? tags.DateTimeOriginal.value.join(" ")
+          ? tags.DateTimeOriginal.value.join("")
           : tags.DateTimeOriginal.value;
       }
     }
@@ -84,7 +80,7 @@ class MetadataParser {
       }
       if (tags.Make.value) {
         return Array.isArray(tags.Make.value)
-          ? tags.Make.value.join(" ")
+          ? tags.Make.value.join("")
           : tags.Make.value;
       }
     }
@@ -98,7 +94,7 @@ class MetadataParser {
       }
       if (tags.Model.value) {
         return Array.isArray(tags.Model.value)
-          ? tags.Model.value.join(" ")
+          ? tags.Model.value.join("")
           : tags.Model.value;
       }
     }
