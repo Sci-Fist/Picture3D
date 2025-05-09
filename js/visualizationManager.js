@@ -1,134 +1,168 @@
 // js/visualizationManager.js
 
-// Import any necessary THREE modules here if needed, e.g.,
-// import * as THREE from './lib/three.module.js';
-// import { Vector3 } from './lib/three.module.js';
+// Import Three.js core library using the module path from the CDN
+import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/build/three.module.js";
 
-/**
- * Manages different 3D visualization modes and photo placement.
- * Orchestrates dynamic loading based on camera view.
- */
-class VisualizationManager {
+// Assuming DataManager and ThreeSceneManager are imported elsewhere (via main.js passing instances)
+// import { DataManager } from './dataManager.js'; // Example import
+// import { ThreeSceneManager } from './threeSceneManager.js'; // Example import
+
+export class VisualizationManager {
   constructor() {
-    console.log("VisualizationManager constructor called"); // For debugging
-    // You might want properties here to track current mode, displayed photos, etc.
-    this.currentMode = "spherical"; // Example: 'spherical', 'cube', 'distributed'
-    this.currentlyDisplayedPhotos = new Map(); // Map photo ID to its THREE.Mesh object
-    // this.placementLogic = new SphericalPlacementLogic(); // Example: Object to handle position calculations
+    console.log("VisualizationManager constructor called");
+    this.activePhotos = new Set(); // Track photo IDs currently added to the scene
+    this.lastCameraPosition = new THREE.Vector3(); // Store camera position for change detection
+    this.updateThreshold = 0.1; // Distance the camera must move to trigger an update check
+    this.viewDistance = 20; // Max distance photos are potentially visible (adjust as needed)
+    this.targetCenter = new THREE.Vector3(0, 0, 0); // The point around which the photos are placed
   }
 
-  /**
-   * Calculates the 3D position for a photo based on its metadata and the current visualization mode.
-   * This is a placeholder and needs actual implementation based on date, location, etc.
-   * @param {object} photoMetadata - The metadata of the photo.
-   * @returns {THREE.Vector3} The calculated 3D position.
-   */
-  getPhotoPosition(photoMetadata) {
-    console.log(
-      "VisualizationManager: Calculating position for photo:",
-      photoMetadata,
-    );
-
-    // --- Placeholder Logic ---
-    // Replace this with logic based on photoMetadata.date, .location, etc.
-    // For now, let's just place them randomly or in a simple grid/sphere for testing.
-
-    // Simple random placement on a sphere for now
-    const radius = 10; // Example sphere radius
-    const phi = Math.random() * Math.PI; // Latitude
-    const theta = Math.random() * Math.PI * 2; // Longitude
-
-    const x = radius * Math.sin(phi) * Math.cos(theta);
-    const y = radius * Math.cos(phi);
-    const z = radius * Math.sin(phi) * Math.sin(theta);
-
-    return new THREE.Vector3(x, y, z);
-    // --- End Placeholder Logic ---
-  }
-
-  /**
-   * Called in the animation loop or when files are loaded.
-   * Determines which photos should be visible and instructs the scene manager to update.
-   * @param {DataManager} dataManager - The DataManager instance holding photo metadata.
-   * @param {ThreeSceneManager} sceneManager - The ThreeSceneManager instance to add/remove objects.
-   * @param {THREE.Camera} camera - The current camera.
-   */
-  updateScene(dataManager, sceneManager, camera) {
-    // This method will be called frequently. Implement efficient logic.
-
-    // --- Placeholder Logic ---
-    // This is a very basic placeholder.
-    // Real implementation should:
-    // 1. Get photos from dataManager based on camera frustum/distance.
-    // 2. Compare with this.currentlyDisplayedPhotos.
-    // 3. Add new visible photos using sceneManager.addPhoto(metadata, position, rotation).
-    // 4. Remove no-longer-visible photos using sceneManager.removePhoto(photoId).
-    // 5. Update this.currentlyDisplayedPhotos map.
-
-    // For now, let's just add ALL photos from the dataManager if none are displayed.
-    // This is NOT performant for large numbers of photos.
-
-    const allPhotos = dataManager.getPhotos();
-    const scene = sceneManager.getScene(); // Get the actual THREE.Scene object
-
-    if (this.currentlyDisplayedPhotos.size === 0 && allPhotos.length > 0) {
-      console.log(
-        `VisualizationManager: Attempting to add ${allPhotos.length} photos to the scene.`,
+  // Calculates the position and rotation for a photo in the spherical view based on date
+  // This is the MVP visualization logic
+  calculateSphericalPosition(photoMetadata) {
+    if (!photoMetadata.date || isNaN(photoMetadata.date.getTime())) {
+      // Handle photos without valid date - maybe place them at a default spot or exclude
+      // For now, return null to exclude them from this visualization mode
+      console.warn(
+        `Photo ${photoMetadata.name} has no valid date metadata, skipping spherical positioning.`,
       );
-
-      // Limit adding a huge number of photos initially for performance testing
-      const maxInitialPhotos = 50;
-      const photosToAdd = allPhotos.slice(0, maxInitialPhotos);
-
-      photosToAdd.forEach((photoMetadata) => {
-        // In a real app, you'd get a texture here, probably asynchronously
-        // For the placeholder, let's just add a simple representation
-        const geometry = new THREE.PlaneGeometry(1, 1); // Example size
-        const material = new THREE.MeshBasicMaterial({
-          color: 0xcccccc,
-          side: THREE.DoubleSide,
-        }); // Placeholder material
-
-        const photoMesh = new THREE.Mesh(geometry, material);
-
-        // Calculate position (using the placeholder logic)
-        const position = this.getPhotoPosition(photoMetadata);
-        photoMesh.position.copy(position);
-
-        // Basic rotation to face the origin (center of the sphere)
-        photoMesh.lookAt(0, 0, 0);
-
-        // You'd need a unique ID for the photo to remove it later
-        // For placeholder, use array index as a simple ID
-        // In a real app, photoData should have a unique ID (e.g., file path)
-        const photoId =
-          photoMetadata.src || `photo-${photosToAdd.indexOf(photoMetadata)}`;
-        photoMesh.userData.photoId = photoId; // Store ID on the mesh
-
-        scene.add(photoMesh);
-        this.currentlyDisplayedPhotos.set(photoId, photoMesh);
-        console.log(
-          `VisualizationManager: Added placeholder mesh for ${photoId}`,
-        );
-      });
-
-      // IMPORTANT: In a real implementation, you'd load textures asynchronously
-      // and update the material once the texture is loaded.
+      return null;
     }
 
-    // --- End Placeholder Logic ---
+    const date = photoMetadata.date;
+    // Simple mapping: Use date to distribute photos around a sphere
+    // Let's map date to longitude (theta) and maybe time of day to latitude (phi)
+    // This assumes a roughly uniform distribution of photos over time.
+
+    // Example 1: Map date to angle around Y axis (longitude)
+    // Need a reference date and a scale factor
+    const epoch = new Date("2000-01-01T00:00:00Z"); // Arbitrary start date
+    const daysSinceEpoch =
+      (date.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24); // Difference in days
+    const anglePerDay = 0.01; // Adjust this value to spread out photos (radians per day)
+    const theta = (daysSinceEpoch * anglePerDay) % (Math.PI * 2); // Ensure it wraps around
+
+    // Example 2: Map something else to angle from Y axis (latitude)
+    // Maybe map the hour of the day to latitude? (0 = top, PI = bottom)
+    const hours = date.getHours(); // 0-23
+    const phi = (hours / 24) * Math.PI; // Map 0-23 hours to 0-PI (top to bottom hemisphere)
+
+    // Spherical coordinates (radius, phi, theta)
+    // Let's use a fixed radius for now
+    const radius = 10; // Distance from the center (adjust based on your scene scale)
+
+    const x = this.targetCenter.x + radius * Math.sin(phi) * Math.cos(theta);
+    const y = this.targetCenter.y + radius * Math.cos(phi);
+    const z = this.targetCenter.z + radius * Math.sin(phi) * Math.sin(theta);
+
+    const position = new THREE.Vector3(x, y, z);
+
+    // Calculate rotation to face the center (or the camera)
+    // Pointing towards the origin (0,0,0)
+    const lookAtVector = this.targetCenter;
+    const dummy = new THREE.Object3D(); // Use a temporary object to calculate rotation
+    dummy.position.copy(position);
+    dummy.lookAt(lookAtVector);
+    const rotation = dummy.rotation.clone();
+
+    return { position, rotation };
   }
 
-  /**
-   * Switches the visualization mode. Needs implementation.
-   * @param {string} mode - The mode to switch to ('spherical', 'cube', 'distributed').
-   */
-  switchMode(mode) {
-    console.log(`VisualizationManager: Switching mode to ${mode}`);
-    this.currentMode = mode;
-    // TODO: Implement logic to clear current scene, re-calculate all photo positions based on new mode, and add them back.
+  // Main update method called when camera moves or data changes
+  updateScene(dataManager, sceneManager, camera) {
+    // console.log('VisualizationManager updateScene called'); // Debug log (can be noisy)
+
+    // Get photos that should be visible based on the current view
+    const allPhotos = dataManager.getAllPhotos(); // Get all photos from DataManager for now
+
+    // In a more optimized version, you'd filter `allPhotos` here based on camera frustum and distance
+    // For MVP, we'll add/remove based on a simple distance check from the target center
+    // This is a simplification and will still load textures for distant photos if they are added to the scene
+
+    // Let's refine the MVP logic: Only add photos if they are within a certain *sphere* radius
+    // and remove them if they are outside that radius. This is simpler than frustum culling for now.
+    // The camera position relative to the photo is what matters for display, but a fixed radius
+    // around the data center is easier to implement first.
+
+    const photosToDisplay = new Set();
+    const maxDistanceFromCenter = this.viewDistance; // Define a range around the data center
+
+    allPhotos.forEach((photoMetadata) => {
+      const placement = this.calculateSphericalPosition(photoMetadata);
+      if (placement) {
+        // For MVP, just add/remove based on existence in the data set
+        // A proper implementation checks proximity to the camera OR proximity to a central point for layout
+        photosToDisplay.add(photoMetadata.name); // Add the photo's unique ID
+      }
+    });
+
+    // Determine photos to remove (currently active but not in photosToDisplay)
+    const photosToRemove = new Set();
+    this.activePhotos.forEach((photoId) => {
+      if (!photosToDisplay.has(photoId)) {
+        photosToRemove.add(photoId);
+      }
+    });
+
+    // Remove photos
+    photosToRemove.forEach((photoId) => {
+      sceneManager.removePhoto(photoId); // sceneManager handles disposal
+      this.activePhotos.delete(photoId);
+    });
+
+    // Determine photos to add (in photosToDisplay but not currently active)
+    const photosToAdd = new Set();
+    photosToDisplay.forEach((photoId) => {
+      if (!this.activePhotos.has(photoId)) {
+        // Check if the photo actually exists in DataManager's index
+        const photoMetadata = dataManager.getPhoto(photoId); // Assuming DataManager has this method
+        if (photoMetadata) {
+          // Check if its position is within the visualization range (if using a fixed range)
+          const placement = this.calculateSphericalPosition(photoMetadata); // Recalculate position
+          // For now, we always add if it has placement info. Dynamic loading needs refinement here.
+          // A better dynamic loading would check if the photo's *calculated position* is near the *camera*.
+          // This MVP version adds/removes based on the *set of all photos loaded*, which isn't dynamic loading yet.
+          // Let's stick to adding all photos with date data for now, and optimize dynamic loading later.
+          photosToAdd.add(photoMetadata); // Add the photoMetadata object
+        } else {
+          console.warn(
+            `Photo ID ${photoId} is in photosToDisplay set but not found in DataManager.`,
+          );
+        }
+      }
+    });
+
+    // Add new photos
+    photosToAdd.forEach((photoMetadata) => {
+      // For MVP, always use spherical position
+      const placement = this.calculateSphericalPosition(photoMetadata);
+      if (placement) {
+        sceneManager.addPhoto(
+          photoMetadata,
+          placement.position,
+          placement.rotation,
+        ); // Pass the full metadata
+        this.activePhotos.add(photoMetadata.name); // Add the photo ID to active set
+      }
+    });
+
+    // console.log(`VisualizationManager: Added ${photosToAdd.size}, Removed ${photosToRemove.size}. Total active: ${this.activePhotos.size}`); // Can be noisy
+  }
+
+  // Clear method for when the user clears the selection
+  clear() {
+    this.activePhotos.clear();
+    this.lastCameraPosition.set(0, 0, 0); // Reset last camera position
+    // The actual removal from the scene is handled by ThreeSceneManager.clearPhotos
+    console.log("VisualizationManager state cleared.");
+  }
+
+  // You would add other visualization mode calculations here later
+  // calculateCubePosition(photoMetadata) { ... }
+  // calculateDistributedPosition(photoMetadata) { ... }
+
+  // Method to handle photo clicks from the scene manager
+  handlePhotoClick(photoMetadata, uiHandler) {
+    uiHandler.showPreview(photoMetadata);
   }
 }
-
-// This is the critical line that makes VisualizationManager available for import
-export { VisualizationManager };
