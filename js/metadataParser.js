@@ -1,7 +1,7 @@
 // js/metadataParser.js
 
 // Import ExifReader as a module from node_modules
-import ExifReader from "exifreader"; // Import the default export
+import * as ExifReader from "exifreader"; // Import everything as a namespace
 
 export class MetadataParser {
   constructor() {
