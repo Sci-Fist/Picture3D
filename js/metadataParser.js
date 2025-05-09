@@ -1,136 +1,179 @@
-// js\metadataParser.js
+// js/metadataParser.js
 
-// Removed import statement.
-// Based on repeated SyntaxErrors and the library's source, the library './lib/exifreader.js'
-// does not use standard ES Module exports. It is expected to be included
-// via a <script> tag and exposes a global variable, most likely named 'ExifReader'.
+// Assumes exifreader.js is loaded globally in index.html and provides a global 'ExifReader' object
 
-class MetadataParser {
+export class MetadataParser {
+  constructor() {
+    console.log("MetadataParser constructor called");
+    // Check if ExifReader is available
+    this.isExifReaderAvailable = typeof window.ExifReader !== "undefined";
+
+    console.log("Debugging ExifReader availability:");
+    console.log("typeof window.ExifReader:", typeof window.ExifReader);
+    if (this.isExifReaderAvailable) {
+      console.log("window.ExifReader exists. Type:", typeof window.ExifReader);
+      console.log("window.ExifReader:", window.ExifReader);
+      console.log(
+        "typeof window.ExifReader.load:",
+        typeof window.ExifReader.load,
+      );
+    } else {
+      console.error(
+        "ExifReader is not available globally. Metadata parsing will fail.",
+      );
+    }
+    console.log("--- End Debugging Logs ---");
+  }
+
   async parseMetadata(file) {
+    if (!this.isExifReaderAvailable) {
+      console.error(
+        "MetadataParser: ExifReader not loaded. Cannot parse metadata.",
+      );
+      return null;
+    }
+
     try {
-      const buffer = await file.arrayBuffer();
+      // ExifReader.load accepts a File object directly
+      const tags = await ExifReader.load(file);
 
-      // --- Critical Debugging Logs ---
-      // Log the state of the global ExifReader BEFORE checking it
-      console.log("Debugging ExifReader availability:");
-      console.log("typeof window.ExifReader:", typeof window.ExifReader);
-      if (typeof window.ExifReader !== "undefined") {
-        console.log(
-          "window.ExifReader exists. Type:",
-          typeof window.ExifReader,
-        );
-        console.log("window.ExifReader:", window.ExifReader); // Log the actual object
-        console.log(
-          "typeof window.ExifReader.load:",
-          typeof window.ExifReader.load,
-        );
-      } else {
-        console.log("window.ExifReader is undefined.");
-      }
-      console.log("--- End Debugging Logs ---");
-
-      // --- Critical Check ---
-      // Verify that the global 'ExifReader' variable exists and has a 'load' function.
-      // This confirms the library script was loaded correctly via a <script> tag.
-      // If this check fails, the issue is with loading the exifreader.js script.
-      if (
-        typeof ExifReader === "undefined" || // Checks if the global variable exists
-        typeof ExifReader.load !== "function" // Checks if the 'load' property is a function
-      ) {
-        console.error(
-          "ExifReader library not loaded or 'load' function not found.",
-        );
-        console.error(
-          "Ensure './lib/exifreader.js' is loaded via a <script> tag BEFORE any script that uses MetadataParser.",
-        );
-        // Throw a specific error to indicate the dependency is missing
-        throw new Error(
-          "ExifReader library or load function not available globally.",
-        );
-      }
-      // --- End Critical Check ---
-
-      // Now call the global ExifReader.load function
-      // Based on the source, ExifReader.load should be the correct function
-      const tags = ExifReader.load(buffer);
-
+      // Extract relevant information
       const metadata = {
-        date: this.extractDate(tags),
-        make: this.extractMake(tags),
-        model: this.extractModel(tags),
-        // Add other metadata fields as needed
+        name: file.webkitRelativePath || file.name, // Use path if available, otherwise name
+        size: file.size,
+        type: file.type,
+        lastModified: new Date(file.lastModified),
+        src: URL.createObjectURL(file), // Create a temporary URL for display/texture loading
+
+        // --- Extracting specific metadata ---
+        // Date/Time (Prioritize DateTimeOriginal, then DateTime)
+        date: null,
+        // GPS Location
+        gps: null,
+        // Camera Make/Model
+        make: tags["Make"] ? tags["Make"].description : null,
+        model: tags["Model"] ? tags["Model"].description : null,
+        // Dimensions (from image itself or metadata)
+        imageWidth: tags["Image Width"]
+          ? tags["Image Width"].value
+          : tags["PixelXDimension"]
+            ? tags["PixelXDimension"].value
+            : null,
+        imageHeight: tags["Image Height"]
+          ? tags["Image Height"].value
+          : tags["PixelYDimension"]
+            ? tags["PixelYDimension"].value
+            : null,
+        // Other potentially useful tags
+        orientation: tags["Orientation"] ? tags["Orientation"].value : null, // For image rotation correction
+        exposureTime: tags["ExposureTime"]
+          ? tags["ExposureTime"].description
+          : null,
+        fNumber: tags["FNumber"] ? tags["FNumber"].description : null,
+        isoSpeedRatings: tags["ISOSpeedRatings"]
+          ? tags["ISOSpeedRatings"].value
+          : null,
+        focalLength: tags["FocalLength"]
+          ? tags["FocalLength"].description
+          : null,
+        lensModel: tags["LensModel"] ? tags["LensModel"].description : null,
+      };
+
+      // Parse Date/Time
+      if (tags["DateTimeOriginal"] && tags["DateTimeOriginal"].description) {
+        // Attempt to parse date string like "YYYY:MM:DD HH:MM:SS"
+        const dateStr = tags["DateTimeOriginal"].description
+          .replace(/:/g, "-")
+          .replace(" ", "T");
+        metadata.date = new Date(dateStr);
+        if (isNaN(metadata.date.getTime())) {
+          // If parsing failed, try DateTime
+          if (tags["DateTime"] && tags["DateTime"].description) {
+            const dateStr2 = tags["DateTime"].description
+              .replace(/:/g, "-")
+              .replace(" ", "T");
+            metadata.date = new Date(dateStr2);
+          } else {
+            metadata.date = new Date(file.lastModified); // Fallback to file modified date
+            console.warn(
+              `MetadataParser: Could not parse DateTimeOriginal or DateTime for ${file.name}, using file modification date.`,
+            );
+          }
+        }
+      } else if (tags["DateTime"] && tags["DateTime"].description) {
+        const dateStr = tags["DateTime"].description
+          .replace(/:/g, "-")
+          .replace(" ", "T");
+        metadata.date = new Date(dateStr);
+        if (isNaN(metadata.date.getTime())) {
+          metadata.date = new Date(file.lastModified); // Fallback to file modified date
+          console.warn(
+            `MetadataParser: Could not parse DateTime for ${file.name}, using file modification date.`,
+          );
+        }
+      } else {
+        metadata.date = new Date(file.lastModified); // Fallback to file modified date
+        console.warn(
+          `MetadataParser: No Date/Time metadata found for ${file.name}, using file modification date.`,
+        );
+      }
+
+      // Parse GPS data
+      if (tags["GPSLatitude"] && tags["GPSLongitude"]) {
+        // ExifReader provides parsed GPS values directly
+        metadata.gps = {
+          latitude: tags["GPSLatitude"].description, // This might be a string, or the parsed value
+          longitude: tags["GPSLongitude"].description, // This might be a string, or the parsed value
+          // ExifReader often provides numerical values in .value
+          latitudeValue: tags["GPSLatitude"].value,
+          longitudeValue: tags["GPSLongitude"].value,
+          altitude: tags["GPSAltitude"] ? tags["GPSAltitude"].value : null,
+        };
+        // Need to handle GPS reference (N, S, E, W) if .description isn't the final value
+        if (tags["GPSLatitudeRef"] && tags["GPSLatitudeRef"].value === "S")
+          metadata.gps.latitudeValue *= -1;
+        if (tags["GPSLongitudeRef"] && tags["GPSLongitudeRef"].value === "W")
+          metadata.gps.longitudeValue *= -1;
+      }
+
+      // Clean up object URL when the metadata is no longer needed or the photo is removed
+      // This is important for memory management with large numbers of files
+      // Need a mechanism in visualizationManager to call this when a photo is removed
+      metadata.revokeObjectURL = () => {
+        if (metadata.src) {
+          URL.revokeObjectURL(metadata.src);
+          metadata.src = null; // Prevent revoking multiple times
+        }
       };
 
       return metadata;
     } catch (error) {
-      // Log the specific error that occurred during parsing
       console.error(
-        "Error parsing metadata for file:",
-        file.name,
-        ":",
-        error.message || error,
+        `MetadataParser: Failed to parse metadata for ${file.name}:`,
+        error,
       );
-      // You might want to log the original error object for more details if needed
-      // console.error("Original error object:", error);
-
-      // Decide how to handle the failure - returning null means the file is processed
-      // but no metadata is attached. Throwing the error would stop processing this file.
-      // Returning null matches your original code structure and allows other files to load.
-      return null;
+      // Even if metadata parsing fails, we might still want to include the photo
+      // Return basic info so at least the image can be loaded
+      return {
+        name: file.webkitRelativePath || file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: new Date(file.lastModified),
+        src: URL.createObjectURL(file),
+        date: new Date(file.lastModified), // Fallback date
+        gps: null,
+        make: null,
+        model: null,
+        imageWidth: null, // Will need to load image to get dimensions if not in metadata
+        imageHeight: null,
+        orientation: null,
+        revokeObjectURL: () => {
+          if (metadata.src) {
+            URL.revokeObjectURL(metadata.src);
+            metadata.src = null;
+          }
+        },
+      };
     }
   }
-
-  extractDate(tags) {
-    // ExifReader tags often have a 'description' property with a formatted string.
-    // 'value' can be raw data (like an array). Prefer description if available.
-    if (tags && tags.DateTimeOriginal) {
-      if (tags.DateTimeOriginal.description) {
-        return tags.DateTimeOriginal.description; // Formatted date string
-      }
-      if (tags.DateTimeOriginal.value) {
-        // Fallback to value, convert array of characters to string if necessary
-        // ExifReader value for strings is often an array of numeric character codes
-        return Array.isArray(tags.DateTimeOriginal.value)
-          ? tags.DateTimeOriginal.value
-              .map((code) => String.fromCharCode(code))
-              .join("")
-          : tags.DateTimeOriginal.value; // Should be a string or number otherwise
-      }
-    }
-    return null;
-  }
-
-  extractMake(tags) {
-    if (tags && tags.Make) {
-      if (tags.Make.description) {
-        return tags.Make.description;
-      }
-      if (tags.Make.value) {
-        // Join character codes into a string
-        return Array.isArray(tags.Make.value)
-          ? tags.Make.value.map((code) => String.fromCharCode(code)).join("")
-          : tags.Make.value;
-      }
-    }
-    return null;
-  }
-
-  extractModel(tags) {
-    if (tags && tags.Model) {
-      if (tags.Model.description) {
-        return tags.Model.description;
-      }
-      if (tags.Model.value) {
-        // Join character codes into a string
-        return Array.isArray(tags.Model.value)
-          ? tags.Model.value.map((code) => String.fromCharCode(code)).join("")
-          : tags.Model.value;
-      }
-    }
-    return null;
-  }
-
-  // Add other extraction methods here as needed for other tags
 }
-
-export { MetadataParser };
