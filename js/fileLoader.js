@@ -5,6 +5,7 @@ export class FileLoader {
   constructor() {
     console.log("FileLoader constructor called");
     this.metadataParser = new MetadataParser();
+    this.fileCounter = 0; // Add a counter for unique IDs
   }
 
   async readFiles(fileList, dataManager, uiHandler, onComplete) {
@@ -15,12 +16,15 @@ export class FileLoader {
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
       // Basic check for image files (you might want a more robust check)
-      if (file.type.startsWith("image/")) {
+      // Skip system files like desktop.ini
+      if (file.type.startsWith("image/") && file.name !== "desktop.ini") {
         imageFiles.push(file);
       } else {
-        console.log(
-          `FileLoader: Skipping non-image file: ${file.name} (${file.type})`,
-        );
+        if (file.name !== "desktop.ini") {
+          console.log(
+            `FileLoader: Skipping non-image file: ${file.name} (${file.type})`,
+          );
+        }
       }
     }
 
@@ -39,7 +43,10 @@ export class FileLoader {
       try {
         const metadata = await this.metadataParser.parseMetadata(file);
         if (metadata) {
+          // Assign a unique ID based on processing order
+          metadata.id = this.fileCounter++; // Assign and increment counter
           dataManager.addPhoto(metadata);
+          // console.log(`FileLoader: Metadata parsed and added for ${file.name}`, metadata); // Log metadata to inspect date/etc.
           console.log(`FileLoader: Metadata parsed and added for ${file.name}`);
         } else {
           console.warn(
