@@ -1,98 +1,226 @@
+/* style.css */
+
+/* Use Flexbox for the main layout to distribute space */
 body {
     margin: 0;
-    overflow: hidden; /* Hide scrollbars */
+    overflow: hidden; /* Prevent scrollbars */
     font-family: sans-serif;
-    background-color: #f0f0f0; /* Light background for general page */
-    color: #333; /* Default text color */
+    background-color: #111; /* Match Three.js background slightly */
+    color: #eee; /* Text color for UI */
+
+    display: flex; /* Make body a flex container */
+    flex-direction: column; /* Stack children vertically */
+    width: 100vw; /* Make body fill viewport width */
+    height: 100vh; /* Make body fill viewport height */
 }
 
+/* app-container is no longer strictly necessary for layout with body flex */
+/* but keeping it as a wrapper might be useful for other reasons */
+/* Ensure it doesn't interfere with the body flex layout */
 #app-container {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+    /* Removed positioning and size properties that conflict with body flex */
+    /* It will simply contain the children elements */
+    display: flex; /* Make app-container a flex container */
+    flex-direction: column; /* Stack its children vertically */
+    flex-grow: 1; /* Allow app-container to grow and fill remaining space if needed */
+    min-height: 0; /* Required for flex items containing other flex items to size correctly */
 }
 
 #controls-container {
+    /* Removed absolute positioning */
+    position: relative; /* Use relative positioning - still respects flow */
+    z-index: 10; /* Ensure UI is above 3D scene */
+    background-color: rgba(0, 0, 0, 0.5);
     padding: 10px;
-    background-color: #eee;
-    border-bottom: 1px solid #ccc;
-    display: flex; /* Arrange controls horizontally */
+    border-bottom-right-radius: 8px;
+    display: flex; /* Layout buttons/loading horizontally */
     align-items: center;
-    gap: 10px; /* Space between controls */
+    gap: 10px; /* Space between items */
+    flex-wrap: wrap; /* Allow buttons to wrap if screen is narrow */
+
+    /* Flex item properties: take up only needed height */
+    flex-shrink: 0; /* Prevent it from shrinking */
+    flex-grow: 0; /* Prevent it from growing */
 }
 
-#3d-container {
-    flex-grow: 1; /* Takes up remaining vertical space */
-    background-color: #000; /* Black background for the 3D scene */
-    position: relative; /* Important for absolute positioning of children */
-    cursor: grab; /* Indicate it's interactive */
+#folder-selector {
+    /* Hide the default file input */
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
 }
 
-#photo-preview {
-    position: fixed; /* Fixed to viewport */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); /* Center the element */
-    background-color: white; /* White background for preview */
-    border: 1px solid #ccc;
-    border-radius: 8px; /* Rounded corners */
-    padding: 20px;
-    z-index: 1000; /* Above 3D scene */
-    display: none; /* Initially hidden */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Subtle shadow */
-    color: #333; /* Text color for metadata */
-    max-width: 90vw; /* Max width relative to viewport */
-    max-height: 90vh; /* Max height relative to viewport */
-    overflow: auto; /* Add scrollbars if content exceeds max size */
+#controls-container label {
+    display: inline-block; /* Make label clickable */
+    background-color: #007bff; /* Blue button color */
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
-#preview-image {
-    display: block; /* Remove bottom space */
-    max-width: 100%; /* Ensure image fits within preview div */
-    max-height: 70vh; /* Max height for the image itself */
-    margin: 0 auto 15px auto; /* Center image and add space below */
-    border-radius: 4px; /* Slightly rounded image corners */
+#controls-container label:hover {
+    background-color: #0056b3;
 }
 
-#metadata-display {
-    margin-bottom: 15px;
-    font-size: 0.9em;
-    line-height: 1.4; /* Improve readability */
-    word-break: break-word; /* Prevent long words from overflowing */
-}
-
-#metadata-display p {
-    margin: 5px 0; /* Space between metadata lines */
-}
-
-#close-preview {
-    display: block;
-    margin: 10px auto 0 auto;
-    padding: 8px 20px;
-    background-color: #ddd;
+#controls-container button {
+    background-color: #dc3545; /* Default: Red button color for Clear */
+    color: white;
+    padding: 8px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.2s ease; /* Smooth hover effect */
+    transition: background-color 0.2s ease;
 }
 
-#close-preview:hover {
-    background-color: #ccc;
+#controls-container button#show-controls {
+    /* Specific style for Controls button */
+    background-color: #28a745; /* Green button color */
+}
+
+#controls-container button#show-controls:hover {
+    background-color: #218838;
+}
+
+#controls-container button#show-settings {
+    /* Specific style for Settings button */
+    background-color: #ffc107; /* Yellow button color */
+    color: #212529; /* Dark text for yellow */
+}
+
+#controls-container button#show-settings:hover {
+    background-color: #e0a800;
+}
+
+#controls-container button#clear-selection:hover {
+    /* Hover for Clear button */
+    background-color: #c82333;
 }
 
 #loading-indicator {
-    position: fixed;
+    display: flex; /* Initially hidden, shown by JS */
+    align-items: center;
+    color: #fff;
+    font-size: 0.9em;
+}
+
+#loading-indicator p {
+    margin: 0; /* Remove default paragraph margin */
+}
+
+#3d-container {
+    /* Removed absolute positioning - now a flex item */
+    /* top: 0; left: 0; width: 100%; height: 100%; */
+
+    /* Flex item properties: take up remaining space */
+    flex-grow: 1; /* Allow it to grow and fill available space */
+    min-height: 0; /* Prevent flex item from overflowing container */
+
+    position: relative; /* Keep relative if you need absolute children later */
+    /* Z-index might be needed if other absolute elements overlap */
+}
+
+/* Style for the Three.js canvas */
+#3d-container canvas {
+    display: block;
+    width: 100%; /* Ensure canvas fills its container (#3d-container) */
+    height: 100%; /* Ensure canvas fills its container (#3d-container) */
+}
+
+/* --- Modal Styling (for photo preview, controls info, settings) --- */
+.modal {
+    position: fixed; /* Modals are still positioned fixed relative to viewport */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent dark background */
-    color: white;
-    padding: 20px 30px; /* More padding */
-    border-radius: 5px;
-    z-index: 2000; /* Above preview */
-    display: none;
+    background-color: rgba(0, 0, 0, 0.9); /* More opaque background */
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 20; /* Ensure modals are above everything else */
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto; /* Add scrollbars if content exceeds size */
+    color: #ddd; /* Lighter text color for modal details */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.modal h2 {
+    /* Common style for modal titles */
+    margin-top: 0;
     font-size: 1.2em;
+    color: #fff;
     text-align: center;
+    margin-bottom: 15px;
+}
+
+#photo-preview #preview-image {
+    /* Specific style for preview image */
+    display: block;
+    margin: 0 auto 15px auto;
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+#photo-preview #metadata-display {
+    /* Specific style for metadata display */
+    white-space: pre-wrap;
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #444;
+}
+
+#controls-info-text {
+    /* Style for the controls text content */
+    white-space: pre-wrap;
+    font-size: 1em;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+#settings-modal #settings-content {
+    /* Style for settings content area */
+    margin-bottom: 20px;
+}
+
+#settings-modal #settings-content h3 {
+    /* Style for settings sub-headings */
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #fff;
+    font-size: 1.1em;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+}
+
+#settings-modal #visualization-mode-options label {
+    /* Style for radio button labels */
+    margin-left: 5px;
+    cursor: pointer;
+}
+#settings-modal #visualization-mode-options input[type="radio"] {
+    /* Style for radio buttons */
+    cursor: pointer;
+}
+
+.modal-close-button {
+    /* Common style for close buttons */
+    display: block;
+    margin: 0 auto;
+    padding: 8px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.modal-close-button:hover {
+    background-color: #0056b3;
 }

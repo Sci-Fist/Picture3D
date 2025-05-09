@@ -31,6 +31,9 @@ export class FileLoader {
     const totalImages = imageFiles.length;
     let processedCount = 0;
 
+    // Reset file counter for a new load session
+    this.fileCounter = 0;
+
     for (const file of imageFiles) {
       processedCount++;
       uiHandler.showLoading(
@@ -41,9 +44,10 @@ export class FileLoader {
       );
 
       try {
+        // Pass the original file to parseMetadata to allow ObjectURL creation there
         const metadata = await this.metadataParser.parseMetadata(file);
         if (metadata) {
-          // Assign a unique ID based on processing order
+          // Assign a unique ID based on processing order for visualization spacing
           metadata.id = this.fileCounter++; // Assign and increment counter
           dataManager.addPhoto(metadata);
           // console.log(`FileLoader: Metadata parsed and added for ${file.name}`, metadata); // Log metadata to inspect date/etc.

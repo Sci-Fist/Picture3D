@@ -36,20 +36,20 @@ export class NavigationControls {
     this.controls.update(); // Must call .update() after changes
 
     // Optional: Remove default pan cursor
-    domElement.style.cursor = "grab";
+    // domElement.style.cursor = "grab"; // Let's handle cursor in uiHandler based on state
 
-    // Add event listeners for cursor changes on interaction
-    this.controls.addEventListener("start", () => {
-      if (domElement) domElement.style.cursor = "grabbing";
-    });
-    this.controls.addEventListener("end", () => {
-      if (domElement) domElement.style.cursor = "grab";
-    });
+    // Add event listeners for cursor changes on interaction directly to the element OrbitControls uses
+    // OrbitControls manages its own cursors based on interaction type if enablePan/enableRotate etc are true.
+    // You can override them via CSS or listeners if needed.
+    // For simplicity, let OrbitControls manage its default cursors or style via CSS.
+    // The uiHandler will handle overriding for specific app states (loading, preview).
+    // This part seems okay as is.
   }
 
   update() {
     // Call update in the animation loop if damping is enabled or if auto-rotation is on
-    if (this.controls && this.controls.enabled && this.controls.enableDamping) {
+    if (this.controls && this.controls.enabled) {
+      // Only update if controls are enabled
       this.controls.update();
     }
   }
@@ -57,4 +57,15 @@ export class NavigationControls {
   getControls() {
     return this.controls;
   }
+
+  // Optional: Add a reset method if you want to reset camera position/zoom on clear
+  // reset() {
+  //     if (this.controls) {
+  //          this.controls.reset(); // Resets camera to initial position/zoom and target
+  //          // Or set specific position:
+  //          // this.controls.object.position.set(0, 0, 12); // Set camera position
+  //          // this.controls.target.set(0, 0, 0); // Set orbit target
+  //          // this.controls.update();
+  //     }
+  // }
 }

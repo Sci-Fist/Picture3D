@@ -5,7 +5,6 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="style.css" />
-        <!-- FIX: Changed href to use a relative path -->
         <link rel="icon" href="./favicon.png" type="image/png" />
     </head>
     <body>
@@ -20,20 +19,67 @@
                 />
                 <label for="folder-selector">Select Photo Folder(s)</label>
                 <button id="clear-selection">Clear Selection</button>
+                <button id="show-controls">Show Controls Info</button>
+                <button id="show-settings">Settings</button>
                 <div id="loading-indicator" style="display: none">
                     <p>Loading...</p>
                 </div>
             </div>
             <div id="3d-container"></div>
-            <div id="photo-preview" style="display: none">
+
+            <!-- Photo Preview Modal -->
+            <div id="photo-preview" class="modal" style="display: none">
                 <img id="preview-image" src="" alt="Photo Preview" />
                 <div id="metadata-display"></div>
-                <button id="close-preview">Close</button>
+                <button id="close-preview" class="modal-close-button">
+                    Close
+                </button>
+            </div>
+
+            <!-- Controls Info Modal -->
+            <div id="controls-info" class="modal" style="display: none">
+                <h2>Navigation Controls</h2>
+                <div id="controls-info-text">
+                    <!-- Control instructions will be populated here -->
+                </div>
+                <button id="close-controls" class="modal-close-button">
+                    Close
+                </button>
+            </div>
+
+            <!-- Settings Modal -->
+            <div id="settings-modal" class="modal" style="display: none">
+                <h2>Settings</h2>
+                <div id="settings-content">
+                    <h3>Visualization Mode</h3>
+                    <div id="visualization-mode-options">
+                        <input
+                            type="radio"
+                            id="mode-spherical"
+                            name="visualization-mode"
+                            value="spherical"
+                            checked
+                        />
+                        <label for="mode-spherical">Spherical (Timeline)</label
+                        ><br />
+
+                        <input
+                            type="radio"
+                            id="mode-cubic"
+                            name="visualization-mode"
+                            value="cubic"
+                        />
+                        <label for="mode-cubic">Cubic (Placeholder)</label
+                        ><br />
+                        <!-- Add more modes here later -->
+                    </div>
+                </div>
+                <button id="close-settings" class="modal-close-button">
+                    Close
+                </button>
             </div>
         </div>
 
-        <!-- Your application's entry point loaded as a module -->
-        <!-- Vite will process this and resolve imports from node_modules -->
         <script type="module" src="main.js"></script>
     </body>
 </html>
