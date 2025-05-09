@@ -1,7 +1,7 @@
 // js/navigationControls.js
 
-// Import the OrbitControls class using the module path from the CDN
-import { OrbitControls } from "https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/examples/jsm/controls/OrbitControls.js";
+// Import the OrbitControls class using the module path from the CDN (Using unpkg)
+import { OrbitControls } from "https://unpkg.com/three@0.158.0/examples/jsm/controls/OrbitControls.js";
 
 export class NavigationControls {
   constructor() {
