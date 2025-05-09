@@ -8,31 +8,28 @@ export class MetadataParser {
   constructor() {
     console.log("MetadataParser constructor called");
 
-    // Check if ExifReader was imported successfully and has the 'load' method
-    // This is the standard check when importing the default export
-    this.isExifReaderAvailable =
-      typeof ExifReader !== "undefined" &&
-      typeof ExifReader.load === "function";
+    // Check if ExifReader was imported successfully and is a function
+    this.isExifReaderAvailable = typeof ExifReader === "function";
 
     console.log("Debugging ExifReader availability:");
     console.log("typeof ExifReader:", typeof ExifReader); // Log the imported variable itself
-    console.log("typeof ExifReader.load:", typeof ExifReader.load); // Log the type of the load method
+    // Now we check if the imported variable itself is the expected function
     if (this.isExifReaderAvailable) {
-      console.log("ExifReader is available and its load method is present.");
+      console.log("ExifReader is available and is a function.");
     } else {
-      // This error message helps debug if the import worked but the expected method is missing
+      // This error should ideally not happen if the import succeeded
       console.error(
-        "ExifReader import seems to have succeeded, but the .load method is missing on the imported object. Check import statement or library structure.",
+        "ExifReader was not imported as a function. Metadata parsing will fail.",
       );
     }
     console.log("--- End Debugging Logs ---");
   }
 
   async parseMetadata(file) {
-    // Check again before attempting to use ExifReader.load
+    // Check again before attempting to use ExifReader
     if (!this.isExifReaderAvailable) {
       console.error(
-        "MetadataParser: ExifReader or its load method not available. Cannot parse metadata.",
+        "MetadataParser: ExifReader is not available or not a function. Cannot parse metadata.",
       );
       return null; // Return null or throw an error if parsing cannot proceed
     }
@@ -44,9 +41,8 @@ export class MetadataParser {
     }
 
     try {
-      // The 'exif-reader' library expects a File object or a Buffer/DataView
-      // The browser's File API gives us File objects, which the library handles.
-      const tags = await ExifReader.load(file); // Use the imported ExifReader object
+      // Use the imported ExifReader function directly with the File object
+      const tags = await ExifReader(file); // <--- CORRECT USAGE HERE
 
       // --- Extracting specific metadata ---
       // The structure of the 'tags' object comes from the exif-reader library.
@@ -84,21 +80,25 @@ export class MetadataParser {
       };
 
       // Helper to safely get a tag value and its description if they exist
-      const getTagValue = (tagsGroup, tagName, property = "description") =>
-        tagsGroup?.[tagName]?.[property] ?? null;
+      // Note: exif-reader often puts parsed numerical values directly on tags.gps
+      // and formatted/raw values on tags.GPSInfo or in the tag object itself.
+      // Adjust extraction based on the library's specific output structure.
+      const getTagDescription = (tagsGroup, tagName) =>
+        tagsGroup?.[tagName]?.description ?? null;
 
       const getTagRawValue = (tagsGroup, tagName) =>
-        tagsGroup?.[tagName]?.["value"] ?? null;
+        tagsGroup?.[tagName]?.value ?? null; // Assuming 'value' property holds raw or parsed data
 
-      // Extract common EXIF tags
+      // Extract common EXIF tags - Check the library's tags.js and README for exact structure
+      // Based on node_modules\exif-reader\tags.js and README.md, these are generally correct
       metadata.make =
-        getTagValue(tags.Image, "Make") || getTagValue(tags.Photo, "LensMake"); // Check both possible locations
+        getTagDescription(tags.Image, "Make") ||
+        getTagDescription(tags.Photo, "LensMake"); // Check both possible locations
       metadata.model =
-        getTagValue(tags.Image, "Model") ||
-        getTagValue(tags.Photo, "LensModel"); // Check both possible locations
+        getTagDescription(tags.Image, "Model") ||
+        getTagDescription(tags.Photo, "LensModel"); // Check both possible locations
 
-      // Image dimensions from EXIF (often more reliable than image.width/height before loading)
-      // Check both possible locations and prioritize Pixel dimensions
+      // Image dimensions from EXIF
       metadata.imageWidth =
         getTagRawValue(tags.Photo, "PixelXDimension") ||
         getTagRawValue(tags.Image, "ImageWidth");
@@ -110,80 +110,59 @@ export class MetadataParser {
       metadata.orientation = getTagRawValue(tags.Image, "Orientation"); // Integer value (1, 6, 8, etc.)
 
       // Common photo settings
-      metadata.exposureTime = getTagValue(tags.Photo, "ExposureTime");
-      metadata.fNumber = getTagValue(tags.Photo, "FNumber");
+      metadata.exposureTime = getTagDescription(tags.Photo, "ExposureTime");
+      metadata.fNumber = getTagDescription(tags.Photo, "FNumber");
       metadata.isoSpeedRatings = getTagRawValue(tags.Photo, "ISOSpeedRatings"); // Often raw value
-      metadata.focalLength = getTagValue(tags.Photo, "FocalLength");
-      metadata.lensModel = getTagValue(tags.Photo, "LensModel"); // Specific lens model tag
+      metadata.focalLength = getTagDescription(tags.Photo, "FocalLength");
+      metadata.lensModel = getTagDescription(tags.Photo, "LensModel"); // Specific lens model tag
 
-      // Parse Date/Time (This often requires custom parsing as Date objects are not standard in EXIF)
-      // Prefer DateTimeOriginal, then DateTimeDigitized, then DateTime, fallback to file.lastModified
-      let dateStr = getTagValue(tags.Photo, "DateTimeOriginal"); // This is a string like "YYYY:MM:DD HH:MM:SS" or might already be a Date depending on the library version/parsing
-      if (!dateStr && dateStr !== null) {
-        // If DateTimeOriginal wasn't found or was null
-        dateStr = getTagValue(tags.Photo, "DateTimeDigitized");
-      }
-      if (!dateStr && dateStr !== null) {
-        // If DateTimeDigitized wasn't found or was null
-        dateStr = getTagValue(tags.Image, "DateTime"); // DateTime in the Image group
-      }
+      // Parse Date/Time
+      // exif-reader returns Date objects for DateTimeOriginal/Digitized/DateTime if successful
+      metadata.date =
+        getTagRawValue(tags.Photo, "DateTimeOriginal") ||
+        getTagRawValue(tags.Photo, "DateTimeDigitized") ||
+        getTagRawValue(tags.Image, "DateTime"); // Prioritize these tags
 
-      if (dateStr && typeof dateStr === "string") {
-        // Attempt to parse the EXIF string format "YYYY:MM:DD HH:MM:SS"
-        // Need to convert "YYYY:MM:DD" to "YYYY-MM-DD" for Date constructor
-        const formattedDateStr = dateStr.replace(/:/g, "-").replace(" ", "T"); // Replace first two : with - and space with T
-        const parsedDate = new Date(formattedDateStr);
-
-        if (!isNaN(parsedDate.getTime())) {
-          metadata.date = parsedDate;
-        } else {
-          // If string parsing failed, fall back
-          metadata.date = new Date(file.lastModified);
-          console.warn(
-            `MetadataParser: Could not parse EXIF date string "${dateStr}" for ${file.name}. Using file modification date.`,
-          );
-        }
-      } else if (dateStr instanceof Date && !isNaN(dateStr.getTime())) {
-        // If the library returned a Date object directly
-        metadata.date = dateStr;
-      } else {
-        // If no EXIF date tags were found, fall back to the file's modification date
+      // Fallback to file modified date if no EXIF date is found or if it's invalid
+      if (
+        !metadata.date ||
+        !(metadata.date instanceof Date) ||
+        isNaN(metadata.date.getTime())
+      ) {
         metadata.date = new Date(file.lastModified);
         console.warn(
-          `MetadataParser: No valid EXIF date metadata found for ${file.name}. Using file modification date.`,
+          `MetadataParser: No valid EXIF date metadata found for ${file.name} or parsing failed. Using file modification date.`,
         );
       }
 
       // Parse GPS data
-      // exif-reader provides parsed GPS latitude and longitude as numbers under tags.gps.Latitude and tags.gps.Longitude
-      // It also provides raw values and descriptions under tags.GPSInfo
+      // Based on exif-reader README, numerical lat/lon are on tags.gps
       if (
         tags.gps &&
         typeof tags.gps.Latitude === "number" &&
         typeof tags.gps.Longitude === "number"
       ) {
         metadata.gps = {
-          latitude: tags.gps.Latitude, // Already a number from exif-reader's parsing
-          longitude: tags.gps.Longitude, // Already a number from exif-reader's parsing
-          altitude: getTagRawValue(tags.gps, "GPSAltitude"), // Raw value
+          latitude: tags.gps.Latitude, // Already a number
+          longitude: tags.gps.Longitude, // Already a number
+          altitude: getTagRawValue(tags.gps, "GPSAltitude"), // Use raw value if available
           // Keep original descriptions if needed, though less useful than the number values
-          latitudeDescription: getTagValue(tags.GPSInfo, "GPSLatitude"),
-          longitudeDescription: getTagValue(tags.GPSInfo, "GPSLongitude"),
-          altitudeDescription: getTagValue(tags.GPSInfo, "GPSAltitude"),
+          latitudeDescription: getTagDescription(tags.GPSInfo, "GPSLatitude"), // Description might be here
+          longitudeDescription: getTagDescription(tags.GPSInfo, "GPSLongitude"), // Description might be here
+          altitudeDescription: getTagDescription(tags.GPSInfo, "GPSAltitude"), // Description might be here
         };
-        // exif-reader handles N/S/E/W in its numerical parsing, so we don't need to check LatitudeRef/LongitudeRef here.
-        // AltitudeRef is also typically handled if provided as a number.
+        // AltitudeRef is also typically handled by exif-reader's numerical parsing.
       }
 
       // Return the compiled metadata object
       return metadata;
     } catch (error) {
-      // Catch any errors during ExifReader.load or subsequent processing
+      // Catch any errors during ExifReader call or subsequent processing
       console.error(
-        `MetadataParser: Failed to parse metadata for ${file.name}:`,
+        `MetadataParser: Failed to process metadata for ${file.name}:`,
         error,
       );
-      // Return basic info even if detailed metadata parsing fails
+      // Return basic info even if detailed metadata processing fails
       const basicMetadata = {
         name: file.webkitRelativePath || file.name,
         size: file.size,
