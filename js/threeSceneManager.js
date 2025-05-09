@@ -1,7 +1,7 @@
 // js/threeSceneManager.js
 
-// Import Three.js core library using the module path from the CDN
-import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/build/three.module.js";
+// Import Three.js core library using the module path from the CDN (Using unpkg)
+import * as THREE from "https://unpkg.com/three@0.158.0/build/three.module.js";
 
 export class ThreeSceneManager {
   constructor() {
