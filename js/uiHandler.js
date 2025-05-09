@@ -23,6 +23,11 @@ export class UIHandler {
       "click",
       this.hidePreview.bind(this),
     );
+
+    // Listen for the custom event dispatched by ThreeSceneManager on photo click
+    window.addEventListener("photoClicked", (event) => {
+      this.showPreview(event.detail);
+    });
   }
 
   bindFileSelector(callback) {
