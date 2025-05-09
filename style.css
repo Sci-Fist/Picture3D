@@ -85,7 +85,8 @@ body {
 
 /* Style for the hidden file input - ENSURE THIS IS HIDING IT ROBUSTLY */
 #folder-selector {
-    display: none !important; /* Use display: none to guarantee it's not rendered visually */
+    /* Use display: none to guarantee it's not rendered visually */
+    display: none !important;
     /* Redundant properties with display:none, but keep for max robustness */
     position: absolute !important;
     top: -9999px !important;
