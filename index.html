@@ -5,7 +5,6 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="style.css" />
-        <!-- Added this line to include the favicon -->
         <link rel="icon" href="/favicon.png" type="image/png" />
     </head>
     <body>
@@ -18,13 +17,8 @@
                     directory
                     multiple
                 />
-                <!-- Add a descriptive label for accessibility -->
                 <label for="folder-selector">Select Photo Folder(s)</label>
-
-                <!-- Add Clear Selection button based on main.js -->
                 <button id="clear-selection">Clear Selection</button>
-
-                <!-- Add a dedicated loading indicator element that uiHandler can control -->
                 <div id="loading-indicator" style="display: none">
                     <p>Loading...</p>
                 </div>
@@ -39,23 +33,15 @@
 
         <!-- 1. Load the ExifReader library -->
         <!-- This makes the global 'ExifReader' variable available -->
-        <!-- You can also find ExifReader on a CDN if you prefer -->
+        <!-- Keep this for now as your metadataParser seems to use the global -->
         <script src="./js/lib/exifreader.js"></script>
 
-        <!-- 2. Load the Three.js library from a CDN -->
-        <!-- This makes the global 'THREE' variable available -->
-        <!-- Using r158 as an example version - check cdnjs or other CDNs for the latest -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script>
+        <!-- REMOVE these global script tags -->
+        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script> -->
+        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/examples/js/controls/OrbitControls.js"></script> -->
 
-        <!-- 3. Load any Three.js add-ons like OrbitControls from the CDN -->
-        <!-- This should be after the main three.js script -->
-        <!-- Ensure this matches the version and example path on the CDN -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/examples/js/controls/OrbitControls.js"></script>
-
-        <!-- 4. Load your application scripts as modules -->
-        <!-- These can now safely access the global 'ExifReader' and 'THREE' -->
+        <!-- 2. Load your application scripts as modules -->
+        <!-- These modules will now import Three.js and OrbitControls directly -->
         <script type="module" src="main.js"></script>
-        <!-- main.js imports other modules like visualizationManager and navigationControls, -->
-        <!-- which will now find the globally defined THREE -->
     </body>
 </html>
