@@ -28,7 +28,7 @@ export class ThreeSceneManager {
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    this.camera.position.z = 5; // Start close to the center
+    this.camera.position.z = 20; // Start further away from the center (radius is 10)
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -251,5 +251,10 @@ export class ThreeSceneManager {
         window.dispatchEvent(previewEvent); // Dispatch the event on the window
       }
     }
+  }
+}
+{
+  {
+    REWRITTEN_CODE;
   }
 }
