@@ -1,106 +1,120 @@
-/**
- * Handles UI interactions and updates.
- */
-class UIHandler {
-    /**
-     * Initializes the UIHandler, getting references to key elements.
-     */
-    init() {
-        this.folderSelector = document.getElementById('folder-selector');
-        this.loadingIndicator = document.getElementById('loading-indicator');
-        this.photoPreview = document.getElementById('photo-preview');
-        this.previewImage = document.getElementById('preview-image');
-        this.metadataDisplay = document.getElementById('metadata-display');
-        this.closePreviewBtn = document.getElementById('close-preview');
-    }
+// js/uiHandler.js
 
-    /**
-     * Binds a callback function to the file selector's change event.
-     * @param {function} callback - The function to call when files are selected.
-     */
-    bindFileSelector(callback) {
-        if (this.folderSelector) {
-            this.folderSelector.addEventListener('change', (event) => {
-                callback(event.target.files);
-            });
-        } else {
-            console.error('UIHandler: folder-selector element not found.');
-        }
-    }
+export class UIHandler {
+  constructor() {
+    this.folderSelector = document.getElementById("folder-selector");
+    this.clearButton = document.getElementById("clear-selection");
+    this.loadingIndicator = document.getElementById("loading-indicator");
+    this.photoPreview = document.getElementById("photo-preview");
+    this.previewImage = document.getElementById("preview-image");
+    this.metadataDisplay = document.getElementById("metadata-display");
+    this.closePreviewButton = document.getElementById("close-preview");
+    this.threeDContainer = document.getElementById("3d-container"); // Need this for cursor control
 
-    /**
-     * Shows the loading indicator with an optional message.
-     * @param {string} message - The message to display.
-     */
-    showLoading(message) {
-        if (this.loadingIndicator) {
-            this.loadingIndicator.textContent = message || 'Loading...';
-            this.loadingIndicator.style.display = 'block';
-        } else {
-            console.warn('UIHandler: loading-indicator element not found.');
-        }
-    }
+    console.log("UIHandler constructor called");
+  }
 
-    /**
-     * Hides the loading indicator.
-     */
-    hideLoading() {
-        if (this.loadingIndicator) {
-            this.loadingIndicator.style.display = 'none';
-        }
-    }
+  init() {
+    // Add initial event listeners here if needed, but binding is done in main.js
+    console.log("UIHandler initialized.");
 
-    /**
-     * Shows the photo preview with the image and metadata.
-     * @param {string} imageUrl - The URL of the image.
-     * @param {object} metadata - The metadata object.
-     */
-    showPreview(imageUrl, metadata) {
-        if (this.photoPreview && this.previewImage && this.metadataDisplay) {
-            this.previewImage.src = imageUrl;
-            this.metadataDisplay.innerHTML = this.formatMetadata(metadata); // Use a helper method
-            this.photoPreview.style.display = 'block';
-        }
-    }
+    // Add listener to close preview button
+    this.closePreviewButton.addEventListener(
+      "click",
+      this.hidePreview.bind(this),
+    );
+  }
 
-    /**
-     * Hides the photo preview.
-     */
-    hidePreview() {
-        if (this.photoPreview) {
-            this.photoPreview.style.display = 'none';
+  bindFileSelector(callback) {
+    if (this.folderSelector) {
+      this.folderSelector.addEventListener("change", (event) => {
+        if (event.target.files.length > 0) {
+          // Call the provided callback with the selected files
+          callback(event.target.files);
+          // Clear the file input value so the same folder can be selected again
+          event.target.value = null;
         }
+      });
+      console.log("File selector bound.");
+    } else {
+      console.error("File selector element not found.");
     }
+  }
 
-    /**
-     * Formats the metadata object into HTML for display.
-     * @param {object} metadata - The metadata object.
-     * @returns {string} The HTML string.
-     */
-    formatMetadata(metadata) {
-        if (!metadata) return '<p>No metadata available.</p>';
-
-        let html = '';
-        for (const key in metadata) {
-            if (metadata.hasOwnProperty(key) && metadata[key] !== null && metadata[key] !== undefined) {
-                html += `<p><b>${key}:</b> ${metadata[key]}</p>`;
-            }
-        }
-        if (html === '') {
-            return '<p>No metadata available.</p>';
-        }
-        return html;
+  bindClearButton(callback) {
+    if (this.clearButton) {
+      this.clearButton.addEventListener("click", () => {
+        console.log("Clear selection button clicked.");
+        // Call the provided callback
+        callback();
+        // Optional: Reset UI states if necessary
+        this.hidePreview();
+      });
+      console.log("Clear button bound.");
+    } else {
+      console.error("Clear button element not found.");
     }
+  }
 
-    /**
-     * Binds a callback function to the close preview button's click event.
-     * @param {function} callback - The function to call when the button is clicked.
-     */
-    bindClosePreview(callback) {
-        if (this.closePreviewBtn) {
-            this.closePreviewBtn.addEventListener('click', callback);
-        }
+  showLoading(message = "Loading...") {
+    if (this.loadingIndicator) {
+      this.loadingIndicator.querySelector("p").textContent = message;
+      this.loadingIndicator.style.display = "flex"; // Use flex for centering
     }
+  }
+
+  hideLoading() {
+    if (this.loadingIndicator) {
+      this.loadingIndicator.style.display = "none";
+    }
+  }
+
+  showPreview(photoMetadata) {
+    if (this.photoPreview && this.previewImage && this.metadataDisplay) {
+      this.previewImage.src = photoMetadata.src;
+      this.previewImage.alt = `Preview of ${photoMetadata.name}`;
+
+      // Format and display metadata
+      let metadataHtml = `<h2>${photoMetadata.name}</h2>`;
+      metadataHtml += `<p><strong>Date:</strong> ${photoMetadata.date ? photoMetadata.date.toLocaleString() : "N/A"}</p>`;
+      if (photoMetadata.make || photoMetadata.model) {
+        metadataHtml += `<p><strong>Camera:</strong> ${photoMetadata.make || ""} ${photoMetadata.model || ""}</p>`;
+      }
+      if (
+        photoMetadata.gps &&
+        photoMetadata.gps.latitudeValue !== null &&
+        photoMetadata.gps.longitudeValue !== null
+      ) {
+        metadataHtml += `<p><strong>GPS:</strong> Lat ${photoMetadata.gps.latitudeValue.toFixed(4)}, Lon ${photoMetadata.gps.longitudeValue.toFixed(4)}</p>`;
+        // Optional: Link to a map
+        metadataHtml += `<p><a href="https://www.google.com/maps/search/?api=1&query=${photoMetadata.gps.latitudeValue},${photoMetadata.gps.longitudeValue}" target="_blank">View on Map</a></p>`;
+      }
+      if (photoMetadata.imageWidth && photoMetadata.imageHeight) {
+        metadataHtml += `<p><strong>Dimensions:</strong> ${photoMetadata.imageWidth}x${photoMetadata.imageHeight}</p>`;
+      }
+      // Add more metadata fields as needed
+      metadataHtml += `<p><strong>File Size:</strong> ${(photoMetadata.size / 1024).toFixed(2)} KB</p>`;
+
+      this.metadataDisplay.innerHTML = metadataHtml;
+      this.photoPreview.style.display = "block"; // Show the preview
+
+      // Hide the 3D container's grab cursor when preview is open
+      if (this.threeDContainer) {
+        this.threeDContainer.style.cursor = "default";
+      }
+    }
+  }
+
+  hidePreview() {
+    if (this.photoPreview && this.previewImage && this.metadataDisplay) {
+      this.photoPreview.style.display = "none";
+      this.previewImage.src = ""; // Clear image source
+      this.metadataDisplay.innerHTML = ""; // Clear metadata display
+
+      // Restore the 3D container's grab cursor
+      if (this.threeDContainer) {
+        this.threeDContainer.style.cursor = "grab";
+      }
+    }
+  }
 }
-
-export { UIHandler };
