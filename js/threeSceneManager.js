@@ -1,7 +1,8 @@
 // js/threeSceneManager.js
 
-// Import Three.js core library using the module path from the CDN (Using unpkg)
-import * as THREE from "https://unpkg.com/three@0.158.0/build/three.module.js";
+// Import Three.js core library from the installed 'three' package
+// Vite will find this in node_modules
+import * as THREE from "three";
 
 export class ThreeSceneManager {
   constructor() {

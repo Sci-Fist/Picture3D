@@ -33,13 +33,19 @@
         </div>
 
         <!-- Load the ExifReader library globally -->
-        <!-- Your metadataParser seems to use the global 'ExifReader' -->
-        <!-- Keep this line as it loads a global script, not a module -->
+        <!-- Your metadataParser seems to use the global 'ExifReader'. -->
+        <!-- Keeping this here for now. An alternative is to install exifreader -->
+        <!-- via npm and import it as a module if it supports that. -->
         <script src="./js/lib/exifreader.js"></script>
 
         <!-- Your application's entry point loaded as a module -->
-        <!-- main.js and the modules it imports will handle Three.js imports from CDN -->
-        <!-- FIX: Removed the script tag loading js/lib/three.core.js -->
+        <!-- Vite will process this and resolve imports from node_modules -->
         <script type="module" src="main.js"></script>
+
+        {{!-- REMOVED: Old script tags for Three.js and OrbitControls --}} {{!--
+        <script src="./js/lib/three.min.js"></script>
+        --}} {{!--
+        <script src="./js/lib/OrbitControls.js"></script>
+        --}}
     </body>
 </html>

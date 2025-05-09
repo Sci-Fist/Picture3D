@@ -1,7 +1,8 @@
 // js/navigationControls.js
 
-// Import the OrbitControls class using the module path from the CDN (Using unpkg)
-import { OrbitControls } from "https://unpkg.com/three@0.158.0/examples/jsm/controls/OrbitControls.js";
+// Import the OrbitControls class from the installed 'three' package
+// Vite will find this in node_modules/three/examples/jsm/controls/OrbitControls.js
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export class NavigationControls {
   constructor() {

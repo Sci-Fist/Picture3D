@@ -1,7 +1,7 @@
-// js/visualizationManager.js
+// js\visualizationManager.js
 
-// Ensure this line uses the FULL CDN URL for the Three.js module build
-import * as THREE from "https://unpkg.com/three@0.158.0/build/three.module.js";
+// Ensure this line imports from the installed 'three' package, not a CDN
+import * as THREE from "three";
 
 // Assuming DataManager and ThreeSceneManager are imported elsewhere (via main.js passing instances)
 // import { DataManager } from './dataManager.js'; // Example import
