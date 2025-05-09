@@ -1,8 +1,3 @@
-{
-  {
-    REWRITTEN_CODE;
-  }
-}
 // js/metadataParser.js
 
 // Import ExifReader as a module from node_modules
