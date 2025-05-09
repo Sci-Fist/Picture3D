@@ -17,7 +17,7 @@ if (!container) {
 
 // Set up UI
 const uiHandler = new UIHandler();
-uiHandler.init();
+uiHandler.init(); // Initialize UI elements and their internal listeners
 
 // Set up data and file loading
 const dataManager = new DataManager();
@@ -28,12 +28,13 @@ const visualizationManager = new VisualizationManager();
 
 // Set up navigation controls (needs camera and domElement from threeSceneManager)
 const camera = threeSceneManager.getCamera();
+// Use the renderer's DOM element for OrbitControls - this is the canvas itself
 const controlsElement = threeSceneManager.getRenderer()
   ? threeSceneManager.getRenderer().domElement
   : null;
 
 const navigationControls = new NavigationControls();
-// Ensure camera and controlsElement are valid before initializing controls
+// Ensure camera and controlsElement (the canvas) are valid before initializing controls
 // The threeSceneManager.init now calls onWindowResize at the end,
 // so renderer.domElement should be available immediately after threeSceneManager.init completes.
 if (camera && controlsElement) {
@@ -57,8 +58,14 @@ async function startVisualization() {
     threeSceneManager.getCamera(),
   );
 
+  // Add an event listener to the OrbitControls 'change' event
+  // This ensures the visualization updates when the camera moves (for dynamic loading)
+  // NOTE: This listener should only be added once overall.
+  // A simple check to prevent adding multiple listeners on subsequent file loads:
   const controls = navigationControls.getControls();
+  // Ensure controls object exists before trying to add a listener
   if (controls && !controls._changeListenerAdded) {
+    // Use a custom flag on the controls object to check if listener was added
     controls.addEventListener("change", () => {
       visualizationManager.updateScene(
         dataManager,
@@ -66,7 +73,7 @@ async function startVisualization() {
         threeSceneManager.getCamera(),
       );
     });
-    controls._changeListenerAdded = true;
+    controls._changeListenerAdded = true; // Set the flag
     console.log("main.js: Camera change listener added.");
   } else if (!controls) {
     console.warn(
@@ -166,16 +173,24 @@ uiHandler.bindVisualizationModeChange((selectedMode) => {
   );
 });
 
+// Bind the toggle controls button -- no specific callback needed in main.js for now
+uiHandler.bindToggleControlsButton(() => {
+  // UIHandler handles the visibility toggle.
+  // If you needed to enable/disable OrbitControls based on the overlay state,
+  // you would add logic here or pass a callback to uiHandler.bindToggleControlsButton
+  // For now, OrbitControls stays active regardless of overlay visibility.
+});
+
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
 
   if (navigationControls) {
-    navigationControls.update();
+    navigationControls.update(); // Update controls (handles damping, panning, zooming)
   }
 
   if (threeSceneManager) {
-    threeSceneManager.render();
+    threeSceneManager.render(); // Render the scene
   }
 }
 

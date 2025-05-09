@@ -1,106 +1,154 @@
 /* style.css */
 
-/* Use Flexbox for the main layout to distribute space */
+/* Ensure body covers the full viewport and has no default margin */
 body {
     margin: 0;
     overflow: hidden; /* Prevent scrollbars */
     font-family: sans-serif;
     background-color: #111; /* Match Three.js background slightly */
     color: #eee; /* Text color for UI */
-
-    display: flex; /* Make body a flex container */
-    flex-direction: column; /* Stack children vertically */
-    width: 100vw; /* Make body fill viewport width */
-    height: 100vh; /* Make body fill viewport height */
+    /* Use viewport units for body size to ensure it matches the browser window */
+    width: 100vw;
+    height: 100vh;
 }
 
-/* app-container is no longer strictly necessary for layout with body flex */
-/* but keeping it as a wrapper might be useful for other reasons */
-/* Ensure it doesn't interfere with the body flex layout */
-#app-container {
-    /* Removed positioning and size properties that conflict with body flex */
-    /* It will simply contain the children elements */
-    display: flex; /* Make app-container a flex container */
-    flex-direction: column; /* Stack its children vertically */
-    flex-grow: 1; /* Allow app-container to grow and fill remaining space if needed */
-    min-height: 0; /* Required for flex items containing other flex items to size correctly */
+/* The #app-container is removed from index.html */
+
+/* Make #3d-container cover the entire viewport using fixed positioning */
+#3d-container {
+    position: fixed; /* Position relative to the viewport */
+    top: 0;
+    left: 0;
+    width: 100vw; /* Use viewport units for full width */
+    height: 100vh; /* Use viewport units for full height */
+    z-index: 1; /* Ensure it's below modals and UI overlays */
 }
 
+/* Style for the Three.js canvas - ensure it fills its container */
+#3d-container canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* --- Controls Overlay --- */
 #controls-container {
-    /* Removed absolute positioning */
-    position: relative; /* Use relative positioning - still respects flow */
-    z-index: 10; /* Ensure UI is above 3D scene */
-    background-color: rgba(0, 0, 0, 0.5);
+    position: absolute; /* Position relative to the nearest positioned ancestor (body) */
+    top: 0; /* Align to the top of the viewport */
+    left: 0; /* Align to the left of the viewport */
+    /* The width will be determined by content and padding */
+    z-index: 10; /* Ensure UI is above 3D scene and toggle button */
+    background-color: rgba(0, 0, 0, 0.6); /* Slightly more opaque background */
     padding: 10px;
     border-bottom-right-radius: 8px;
     display: flex; /* Layout buttons/loading horizontally */
     align-items: center;
     gap: 10px; /* Space between items */
     flex-wrap: wrap; /* Allow buttons to wrap if screen is narrow */
-
-    /* Flex item properties: take up only needed height */
-    flex-shrink: 0; /* Prevent it from shrinking */
-    flex-grow: 0; /* Prevent it from growing */
+    transition: transform 0.3s ease-in-out; /* Smooth slide in/out animation */
 }
 
+/* Class to hide the controls container by sliding it up off-screen */
+.hidden-controls {
+    transform: translateY(-100%); /* Move up by its full height */
+}
+
+/* --- Toggle Controls Button --- */
+#toggle-controls {
+    position: absolute; /* Position relative to the viewport */
+    top: 10px; /* 10px from the top */
+    left: 10px; /* 10px from the left */
+    z-index: 15; /* Ensure it's above the controls overlay when both are visible */
+    background-color: rgba(0, 0, 0, 0.5); /* Slightly transparent background */
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.2em; /* Make icon readable */
+    line-height: 1; /* Adjust line height */
+    transition: background-color 0.2s ease; /* Smooth hover effect */
+}
+
+#toggle-controls:hover {
+    background-color: rgba(0, 0, 0, 0.8); /* Darken on hover */
+}
+
+/* --- Styles for buttons within the controls container --- */
+
+/* Style for the hidden file input - ENSURE THIS IS HIDING IT ROBUSTLY */
 #folder-selector {
-    /* Hide the default file input */
-    width: 0.1px;
-    height: 0.1px;
-    opacity: 0;
-    overflow: hidden;
-    position: absolute;
-    z-index: -1;
+    /* Combine multiple hiding techniques and !important */
+    display: block !important; /* Ensure it's a block element for positioning */
+    position: absolute !important; /* Position it absolutely */
+    top: -9999px !important; /* Move it far off-screen */
+    left: -9999px !important; /* Move it far off-screen */
+    width: 1px !important; /* Give it a minimal size */
+    height: 1px !important; /* Give it a minimal size */
+    padding: 0 !important; /* Remove padding */
+    border: 0 !important; /* Remove border */
+    margin: 0 !important; /* Remove margin */
+    opacity: 0 !important; /* Make it fully transparent */
+    pointer-events: none !important; /* Prevent all mouse/touch events */
+    z-index: -1 !important; /* Ensure it's behind everything */
+    overflow: hidden !important; /* Hide any overflow content/text */
+    visibility: hidden !important; /* Explicitly hide it */
 }
 
-#controls-container label {
-    display: inline-block; /* Make label clickable */
+/* Style for the select-folder-button (the visible button) */
+#controls-container button#select-folder-button {
     background-color: #007bff; /* Blue button color */
     color: white;
-    padding: 8px 12px;
+    padding: 8px 12px; /* Match other buttons */
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    border: none; /* Ensure no default button border */
 }
-
-#controls-container label:hover {
+#controls-container button#select-folder-button:hover {
     background-color: #0056b3;
 }
 
+/* Base style for all other buttons in controls-container (Clear, Controls Info, Settings) */
+/* Ensure these styles are applied correctly after the specific button style */
 #controls-container button {
-    background-color: #dc3545; /* Default: Red button color for Clear */
-    color: white;
+    /* Re-apply default button styles here if they were being inherited incorrectly */
     padding: 8px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    /* Make sure they have default colors/backgrounds if not set specifically */
+    background-color: #eee; /* Default light background */
+    color: #333; /* Default dark text */
+}
+
+/* Specific styles for other buttons to override the base if needed */
+#controls-container button#clear-selection {
+    background-color: #dc3545;
+    color: white;
+}
+#controls-container button#clear-selection:hover {
+    background-color: #c82333;
 }
 
 #controls-container button#show-controls {
-    /* Specific style for Controls button */
-    background-color: #28a745; /* Green button color */
+    background-color: #28a745;
+    color: white;
 }
-
 #controls-container button#show-controls:hover {
     background-color: #218838;
 }
 
 #controls-container button#show-settings {
-    /* Specific style for Settings button */
-    background-color: #ffc107; /* Yellow button color */
-    color: #212529; /* Dark text for yellow */
+    background-color: #ffc107;
+    color: #212529;
 }
-
 #controls-container button#show-settings:hover {
     background-color: #e0a800;
 }
 
-#controls-container button#clear-selection:hover {
-    /* Hover for Clear button */
-    background-color: #c82333;
-}
-
+/* --- Loading Indicator Style --- */
 #loading-indicator {
     display: flex; /* Initially hidden, shown by JS */
     align-items: center;
@@ -109,47 +157,27 @@ body {
 }
 
 #loading-indicator p {
-    margin: 0; /* Remove default paragraph margin */
-}
-
-#3d-container {
-    /* Removed absolute positioning - now a flex item */
-    /* top: 0; left: 0; width: 100%; height: 100%; */
-
-    /* Flex item properties: take up remaining space */
-    flex-grow: 1; /* Allow it to grow and fill available space */
-    min-height: 0; /* Prevent flex item from overflowing container */
-
-    position: relative; /* Keep relative if you need absolute children later */
-    /* Z-index might be needed if other absolute elements overlap */
-}
-
-/* Style for the Three.js canvas */
-#3d-container canvas {
-    display: block;
-    width: 100%; /* Ensure canvas fills its container (#3d-container) */
-    height: 100%; /* Ensure canvas fills its container (#3d-container) */
+    margin: 0;
 }
 
 /* --- Modal Styling (for photo preview, controls info, settings) --- */
 .modal {
-    position: fixed; /* Modals are still positioned fixed relative to viewport */
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.9); /* More opaque background */
+    background-color: rgba(0, 0, 0, 0.95);
     padding: 20px;
     border-radius: 10px;
-    z-index: 20; /* Ensure modals are above everything else */
+    z-index: 20;
     max-width: 90%;
     max-height: 90%;
-    overflow: auto; /* Add scrollbars if content exceeds size */
-    color: #ddd; /* Lighter text color for modal details */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    overflow: auto;
+    color: #ddd;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
 }
 
 .modal h2 {
-    /* Common style for modal titles */
     margin-top: 0;
     font-size: 1.2em;
     color: #fff;
@@ -157,8 +185,8 @@ body {
     margin-bottom: 15px;
 }
 
+/* --- Specific Modal Content Styles --- */
 #photo-preview #preview-image {
-    /* Specific style for preview image */
     display: block;
     margin: 0 auto 15px auto;
     max-width: 100%;
@@ -167,7 +195,6 @@ body {
 }
 
 #photo-preview #metadata-display {
-    /* Specific style for metadata display */
     white-space: pre-wrap;
     font-size: 0.9em;
     margin-bottom: 15px;
@@ -176,7 +203,6 @@ body {
 }
 
 #controls-info-text {
-    /* Style for the controls text content */
     white-space: pre-wrap;
     font-size: 1em;
     line-height: 1.5;
@@ -184,12 +210,10 @@ body {
 }
 
 #settings-modal #settings-content {
-    /* Style for settings content area */
     margin-bottom: 20px;
 }
 
 #settings-modal #settings-content h3 {
-    /* Style for settings sub-headings */
     margin-top: 0;
     margin-bottom: 10px;
     color: #fff;
@@ -199,17 +223,15 @@ body {
 }
 
 #settings-modal #visualization-mode-options label {
-    /* Style for radio button labels */
     margin-left: 5px;
     cursor: pointer;
 }
 #settings-modal #visualization-mode-options input[type="radio"] {
-    /* Style for radio buttons */
     cursor: pointer;
 }
 
+/* --- Common Modal Close Button Style --- */
 .modal-close-button {
-    /* Common style for close buttons */
     display: block;
     margin: 0 auto;
     padding: 8px 20px;
@@ -220,7 +242,6 @@ body {
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
-
 .modal-close-button:hover {
     background-color: #0056b3;
 }

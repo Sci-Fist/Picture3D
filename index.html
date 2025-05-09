@@ -8,76 +8,85 @@
         <link rel="icon" href="./favicon.png" type="image/png" />
     </head>
     <body>
-        <div id="app-container">
-            <div id="controls-container">
-                <input
-                    type="file"
-                    id="folder-selector"
-                    webkitdirectory
-                    directory
-                    multiple
-                />
-                <label for="folder-selector">Select Photo Folder(s)</label>
-                <button id="clear-selection">Clear Selection</button>
-                <button id="show-controls">Show Controls Info</button>
-                <button id="show-settings">Settings</button>
-                <div id="loading-indicator" style="display: none">
-                    <p>Loading...</p>
+        <!-- The 3D container now fills the entire viewport behind other elements -->
+        <div id="3d-container"></div>
+
+        <!-- Button to toggle controls overlay - Positioned absolutely as an overlay -->
+        <!-- Using the 'overlay-toggle-button' class for styling -->
+        <button id="toggle-controls" class="overlay-toggle-button">☰</button>
+
+        <!-- Controls overlay - Positioned absolutely as an overlay -->
+        <!-- Its visibility is controlled by JavaScript adding/removing a class -->
+        <div id="controls-container">
+            <!-- HIDDEN file input - THIS IS NECESSARY FOR BROWSING FILES/FOLDERS -->
+            <!-- It is hidden COMPLETELY by CSS and triggered by the button below -->
+            <!-- *** THE LABEL ELEMENT THAT USED TO DISPLAY "Dateien auswählen" IS GONE FROM HERE *** -->
+            <input
+                type="file"
+                id="folder-selector"
+                webkitdirectory
+                directory
+                multiple
+            />
+            <!-- This is the ONLY visible button for file selection -->
+            <!-- It programmatically triggers the hidden file input's click event via JavaScript -->
+            <button id="select-folder-button">Select Photo Folder(s)</button>
+
+            <button id="clear-selection">Clear Selection</button>
+            <button id="show-controls">Show Controls Info</button>
+            <button id="show-settings">Settings</button>
+            <div id="loading-indicator" style="display: none">
+                <p>Loading...</p>
+            </div>
+        </div>
+
+        <!-- Photo Preview Modal - Positioned absolutely as an overlay -->
+        <div id="photo-preview" class="modal" style="display: none">
+            <img id="preview-image" src="" alt="Photo Preview" />
+            <div id="metadata-display"></div>
+            <button id="close-preview" class="modal-close-button">Close</button>
+        </div>
+
+        <!-- Controls Info Modal - Positioned absolutely as an overlay -->
+        <div id="controls-info" class="modal" style="display: none">
+            <h2>Navigation Controls</h2>
+            <div id="controls-info-text">
+                <!-- Control instructions will be populated here -->
+            </div>
+            <button id="close-controls" class="modal-close-button">
+                Close
+            </button>
+        </div>
+
+        <!-- Settings Modal - Positioned absolutely as an overlay -->
+        <div id="settings-modal" class="modal" style="display: none">
+            <h2>Settings</h2>
+            <div id="settings-content">
+                <h3>Visualization Mode</h3>
+                <div id="visualization-mode-options">
+                    <input
+                        type="radio"
+                        id="mode-spherical"
+                        name="visualization-mode"
+                        value="spherical"
+                        checked
+                    />
+                    <label for="mode-spherical">Spherical (Timeline)</label
+                    ><br />
+
+                    <input
+                        type="radio"
+                        id="mode-cubic"
+                        name="visualization-mode"
+                        value="cubic"
+                    />
+                    <label for="mode-cubic">Cubic (Placeholder)</label><br />
+                    <!-- Add more modes here later -->
                 </div>
             </div>
-            <div id="3d-container"></div>
-
-            <!-- Photo Preview Modal -->
-            <div id="photo-preview" class="modal" style="display: none">
-                <img id="preview-image" src="" alt="Photo Preview" />
-                <div id="metadata-display"></div>
-                <button id="close-preview" class="modal-close-button">
-                    Close
-                </button>
-            </div>
-
-            <!-- Controls Info Modal -->
-            <div id="controls-info" class="modal" style="display: none">
-                <h2>Navigation Controls</h2>
-                <div id="controls-info-text">
-                    <!-- Control instructions will be populated here -->
-                </div>
-                <button id="close-controls" class="modal-close-button">
-                    Close
-                </button>
-            </div>
-
-            <!-- Settings Modal -->
-            <div id="settings-modal" class="modal" style="display: none">
-                <h2>Settings</h2>
-                <div id="settings-content">
-                    <h3>Visualization Mode</h3>
-                    <div id="visualization-mode-options">
-                        <input
-                            type="radio"
-                            id="mode-spherical"
-                            name="visualization-mode"
-                            value="spherical"
-                            checked
-                        />
-                        <label for="mode-spherical">Spherical (Timeline)</label
-                        ><br />
-
-                        <input
-                            type="radio"
-                            id="mode-cubic"
-                            name="visualization-mode"
-                            value="cubic"
-                        />
-                        <label for="mode-cubic">Cubic (Placeholder)</label
-                        ><br />
-                        <!-- Add more modes here later -->
-                    </div>
-                </div>
-                <button id="close-settings" class="modal-close-button">
-                    Close
-                </button>
-            </div>
+            <button id="close-settings" class="modal-close-button">
+                Close
+            </button>
         </div>
 
         <script type="module" src="main.js"></script>

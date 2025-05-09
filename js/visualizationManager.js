@@ -109,7 +109,10 @@ export class VisualizationManager {
     return { position, rotation };
   }
 
-  // NEW PLACEHOLDER METHOD: Calculates the position and rotation for Cubic view
+  // PLACEHOLDER METHOD: Calculates the position and rotation for Cubic view
+  // This is not a full cubic layout. It just positions them differently for now.
+  // A proper cubic layout would involve mapping properties (like folder, tags, date ranges)
+  // to different faces or regions of the cube.
   calculateCubePosition(photoMetadata, allPhotos) {
     // Accept allPhotos here
     const photoId = photoMetadata.name;
@@ -121,11 +124,6 @@ export class VisualizationManager {
     ) {
       return null; // Exclude photos without valid dates
     }
-
-    // --- Basic Placeholder Logic for Cubic View ---
-    // This is not a full cubic layout. It just positions them differently for now.
-    // A proper cubic layout would involve mapping properties (like folder, tags, date ranges)
-    // to different faces or regions of the cube.
 
     const id = photoMetadata.id || 0;
     const cubeSize = 20; // Size of the virtual cube
@@ -150,11 +148,6 @@ export class VisualizationManager {
     // For cube view, photos might face forward or follow wall angles
     // Let's make them face forward for this simple placeholder
     const rotation = new THREE.Euler(0, 0, 0); // No rotation
-
-    // console.log( // Can be noisy
-    //     `Calculated CUBIC position for ${photoId} (ID: ${id}, Date: ${photoMetadata.date ? photoMetadata.date.toISOString() : 'N/A'}):`,
-    //     position.toArray(),
-    // );
 
     return { position, rotation };
   }

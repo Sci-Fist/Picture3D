@@ -94,8 +94,10 @@ export class ThreeSceneManager {
   onWindowResize() {
     // Ensure elements exist and container has dimensions
     if (this.container && this.camera && this.renderer) {
-      const width = this.container.clientWidth;
+      // Use window.innerWidth/innerHeight directly if #3d-container is fixed to viewport
+      const width = this.container.clientWidth; // Using clientWidth/Height is usually reliable if the container CSS is correct
       const height = this.container.clientHeight;
+
       if (width > 0 && height > 0) {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
