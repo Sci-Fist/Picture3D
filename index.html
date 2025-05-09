@@ -39,18 +39,18 @@
 
         <!-- 1. Load the ExifReader library -->
         <!-- This makes the global 'ExifReader' variable available -->
+        <!-- You can also find ExifReader on a CDN if you prefer -->
         <script src="./js/lib/exifreader.js"></script>
 
-        <!-- 2. Load the Three.js library -->
+        <!-- 2. Load the Three.js library from a CDN -->
         <!-- This makes the global 'THREE' variable available -->
-        <!-- The path should point to your Three.js build file -->
-        <!-- Ensure this is before your scripts that use THREE -->
-        <script src="./js/lib/three.min.js"></script>
+        <!-- Using r158 as an example version - check cdnjs or other CDNs for the latest -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script>
 
-        <!-- 3. Load any Three.js add-ons like OrbitControls -->
+        <!-- 3. Load any Three.js add-ons like OrbitControls from the CDN -->
         <!-- This should be after the main three.js script -->
-        <!-- Update path if needed -->
-        <script src="./js/lib/OrbitControls.js"></script>
+        <!-- Ensure this matches the version and example path on the CDN -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/examples/js/controls/OrbitControls.js"></script>
 
         <!-- 4. Load your application scripts as modules -->
         <!-- These can now safely access the global 'ExifReader' and 'THREE' -->
