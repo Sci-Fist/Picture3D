@@ -26,6 +26,7 @@ body {
     flex-grow: 1; /* Takes up remaining vertical space */
     background-color: #000; /* Black background for the 3D scene */
     position: relative; /* Important for absolute positioning of children */
+    cursor: grab; /* Indicate it's interactive */
 }
 
 #photo-preview {
