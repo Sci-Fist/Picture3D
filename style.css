@@ -7,20 +7,26 @@ body {
     font-family: sans-serif;
     background-color: #111; /* Match Three.js background slightly */
     color: #eee; /* Text color for UI */
-    /* Use viewport units for body size to ensure it matches the browser window */
     width: 100vw;
     height: 100vh;
 }
 
-/* The #app-container is removed from index.html */
-
-/* Make #3d-container cover the entire viewport using fixed positioning */
-#3d-container {
-    position: fixed; /* Position relative to the viewport */
+/* Make the app-container cover the entire viewport */
+#app-container {
+    position: relative; /* Or fixed */
     top: 0;
     left: 0;
-    width: 100vw; /* Use viewport units for full width */
-    height: 100vh; /* Use viewport units for full height */
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Make #3d-container fill its parent (#app-container) */
+#3d-container {
+    position: absolute; /* Position relative to the parent #app-container */
+    top: 0;
+    left: 0;
+    width: 100%; /* Fill 100% of parent width */
+    height: 100%; /* Fill 100% of parent height */
     z-index: 1; /* Ensure it's below modals and UI overlays */
 }
 
@@ -33,52 +39,51 @@ body {
 
 /* --- Controls Overlay --- */
 #controls-container {
-    position: absolute; /* Position relative to the nearest positioned ancestor (body) */
-    top: 0; /* Align to the top of the viewport */
-    left: 0; /* Align to the left of the viewport */
-    /* The width will be determined by content and padding */
+    position: absolute; /* Position relative to the parent #app-container */
+    top: 0; /* Align to the top of the parent */
+    left: 0; /* Align to the left of the parent */
     z-index: 10; /* Ensure UI is above 3D scene and toggle button */
-    background-color: rgba(0, 0, 0, 0.6); /* Slightly more opaque background */
+    background-color: rgba(0, 0, 0, 0.6);
     padding: 10px;
     border-bottom-right-radius: 8px;
-    display: flex; /* Layout buttons/loading horizontally */
+    display: flex;
     align-items: center;
-    gap: 10px; /* Space between items */
-    flex-wrap: wrap; /* Allow buttons to wrap if screen is narrow */
-    transition: transform 0.3s ease-in-out; /* Smooth slide in/out animation */
+    gap: 10px;
+    flex-wrap: wrap;
+    transition: transform 0.3s ease-in-out;
 }
 
 /* Class to hide the controls container by sliding it up off-screen */
 .hidden-controls {
-    transform: translateY(-100%); /* Move up by its full height */
+    transform: translateY(-100%);
 }
 
 /* --- Toggle Controls Button --- */
 #toggle-controls {
-    position: absolute; /* Position relative to the viewport */
-    top: 10px; /* 10px from the top */
-    left: 10px; /* 10px from the left */
-    z-index: 15; /* Ensure it's above the controls overlay when both are visible */
-    background-color: rgba(0, 0, 0, 0.5); /* Slightly transparent background */
+    position: absolute; /* Position relative to the parent #app-container */
+    top: 10px;
+    left: 10px;
+    z-index: 15;
+    background-color: rgba(0, 0, 0, 0.5);
     color: white;
     padding: 5px 10px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 1.2em; /* Make icon readable */
-    line-height: 1; /* Adjust line height */
-    transition: background-color 0.2s ease; /* Smooth hover effect */
+    font-size: 1.2em;
+    line-height: 1;
+    transition: background-color 0.2s ease;
 }
 
 #toggle-controls:hover {
-    background-color: rgba(0, 0, 0, 0.8); /* Darken on hover */
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 /* --- Styles for buttons within the controls container --- */
 
 /* Style for the hidden file input - ENSURE THIS IS HIDING IT ROBUSTLY */
 #folder-selector {
-    /* Combine multiple hiding techniques and !important */
+    /* Combined multiple hiding techniques and !important */
     display: block !important; /* Ensure it's a block element for positioning */
     position: absolute !important; /* Position it absolutely */
     top: -9999px !important; /* Move it far off-screen */
@@ -97,33 +102,31 @@ body {
 
 /* Style for the select-folder-button (the visible button) */
 #controls-container button#select-folder-button {
-    background-color: #007bff; /* Blue button color */
+    background-color: #007bff;
     color: white;
-    padding: 8px 12px; /* Match other buttons */
+    padding: 8px 12px;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    border: none; /* Ensure no default button border */
+    border: none;
 }
 #controls-container button#select-folder-button:hover {
     background-color: #0056b3;
 }
 
-/* Base style for all other buttons in controls-container (Clear, Controls Info, Settings) */
+/* Base style for all other buttons in controls-container */
 /* Ensure these styles are applied correctly after the specific button style */
 #controls-container button {
-    /* Re-apply default button styles here if they were being inherited incorrectly */
     padding: 8px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    /* Make sure they have default colors/backgrounds if not set specifically */
     background-color: #eee; /* Default light background */
     color: #333; /* Default dark text */
 }
 
-/* Specific styles for other buttons to override the base if needed */
+/* Specific styles for other buttons to override the base */
 #controls-container button#clear-selection {
     background-color: #dc3545;
     color: white;
@@ -150,7 +153,7 @@ body {
 
 /* --- Loading Indicator Style --- */
 #loading-indicator {
-    display: flex; /* Initially hidden, shown by JS */
+    display: flex;
     align-items: center;
     color: #fff;
     font-size: 0.9em;

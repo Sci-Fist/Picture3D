@@ -212,8 +212,6 @@ export class VisualizationManager {
         );
       }
     });
-
-    // console.log(`VisualizationManager: Added ${photosToAdd.size}, Removed ${photosToRemove.size}. Total active: ${this.activePhotos.size}`);
   }
 
   clear() {
