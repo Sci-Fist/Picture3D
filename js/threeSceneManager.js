@@ -6,6 +6,7 @@ import * as THREE from "three";
 
 export class ThreeSceneManager {
   constructor() {
+    console.log("ThreeSceneManager constructor called");
     this.scene = null;
     this.camera = null;
     this.renderer = null;
@@ -13,8 +14,6 @@ export class ThreeSceneManager {
     this.photoObjects = new Map(); // Map to hold photo meshes: photoId -> mesh
     this.loadingManager = new THREE.LoadingManager(); // Manager for textures
     this.textureLoader = new THREE.TextureLoader(this.loadingManager);
-
-    console.log("ThreeSceneManager constructor called");
   }
 
   init(containerElement) {
@@ -28,7 +27,8 @@ export class ThreeSceneManager {
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    this.camera.position.z = 25; // Start well outside the sphere (radius is 10)
+    // >> TEMPORARY VISIBILITY SETTING: Start well outside the sphere
+    this.camera.position.z = 25; // Changed from 5 to 25
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -100,10 +100,11 @@ export class ThreeSceneManager {
 
     // Create a placeholder material while texture loads
     const material = new THREE.MeshBasicMaterial({
-      color: 0x333333,
+      color: 0x333333, // Dark grey placeholder
       side: THREE.DoubleSide,
-    }); // Dark grey placeholder
-    const geometry = new THREE.PlaneGeometry(5, 5); // <-- TEMPORARILY larger size for visibility
+    });
+    // >> TEMPORARY VISIBILITY SETTING: Make the initial plane much larger
+    const geometry = new THREE.PlaneGeometry(10, 10); // Changed from 1, 1 to 10, 10
 
     const photoMesh = new THREE.Mesh(geometry, material);
     photoMesh.position.copy(position);
@@ -133,6 +134,9 @@ export class ThreeSceneManager {
             const aspectRatio = width / height;
             // Scale the plane geometry to match the image aspect ratio while maintaining overall scale
             // We might need a strategy here. Let's scale width based on height=1 for now.
+            // NOTE: The geometry is currently scaled so Height = 1 unit. You might want
+            // to scale it such that the LARGER dimension is 1 or a fixed value.
+            // For now, keeping this as is to just get visibility working.
             photoMesh.geometry.dispose(); // Dispose old geometry
             photoMesh.geometry = new THREE.PlaneGeometry(aspectRatio, 1); // New geometry with correct aspect ratio
           }
@@ -143,7 +147,7 @@ export class ThreeSceneManager {
           });
           photoMesh.material.needsUpdate = true; // Ensure material updates
           console.log(`Loaded texture for photo ${photoId}`);
-          // TODO: Apply orientation if needed using photoMetadata.orientation
+          // TODO: Apply orientation if needed using photoMetadata.orientation (requires geometry or material transform)
         } else {
           // Mesh was removed while texture was loading
           texture.dispose();
