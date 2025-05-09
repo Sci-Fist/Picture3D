@@ -24,9 +24,11 @@
                 <!-- Add Clear Selection button based on main.js -->
                 <button id="clear-selection">Clear Selection</button>
 
-                <div id="loading-indicator" style="display: none">
-                    Loading...
-                </div>
+                <!-- NOTE: The loading indicator is in the HTML, but it's better -->
+                <!-- to manage its display state directly in uiHandler.js -->
+                <!-- You might remove this static div here and let uiHandler create/manage it -->
+                <!-- or just ensure uiHandler targets this ID -->
+                <!-- <div id="loading-indicator" style="display: none">Loading...</div> -->
             </div>
             <div id="3d-container"></div>
             <div id="photo-preview" style="display: none">
@@ -34,9 +36,23 @@
                 <div id="metadata-display"></div>
                 <button id="close-preview">Close</button>
             </div>
+            <!-- Add a dedicated loading indicator element that uiHandler can control -->
+            <div id="loading-indicator" style="display: none">
+                <p>Loading...</p>
+            </div>
         </div>
 
-        <!-- Only one script tag for your main module -->
+        <!-- 1. Load the ExifReader library using a standard script tag -->
+        <!-- This makes the global 'ExifReader' variable available -->
+        <!-- This MUST be placed BEFORE your application's module scripts -->
+        <script src="./js/lib/exifreader.js"></script>
+
+        <!-- 2. Load your application scripts as modules -->
+        <!-- These can now safely access the global 'ExifReader' -->
         <script type="module" src="main.js"></script>
+        <!-- Note: main.js imports other modules, so the order relative to -->
+        <!-- other modules like metadataParser, fileLoader etc., is handled -->
+        <!-- by the module system itself. The critical order is global scripts -->
+        <!-- BEFORE any module scripts that need those globals. -->
     </body>
 </html>
