@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Photo Voyager</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" href="/assets/favicon-6WP59XTv.png" type="image/png" />
+      <script type="module" crossorigin src="/assets/index-mjZ7B36r.js"></script>
+      <link rel="stylesheet" crossorigin href="/assets/index-nnyMJr2i.css">
+    </head>
+    <body>
+        <!-- app-container to manage full screen sizing -->
+        <div id="app-container">
+            <!-- The 3D container fills the app-container -->
+            <div id="3d-container"></div>
+
+            <!-- Button to toggle controls overlay -->
+            <button id="toggle-controls" class="overlay-toggle-button">
+                ☰
+            </button>
+
+            <!-- Controls overlay -->
+            <div id="controls-container">
+                <!-- HIDDEN file input - NECESSARY FOR BROWSING FILES/FOLDERS -->
+                <!-- It is hidden COMPLETELY by CSS and triggered by the button below -->
+                <input
+                    type="file"
+                    id="folder-selector"
+                    webkitdirectory
+                    directory
+                    multiple
+                />
+                <!-- This is the ONLY visible button for file selection -->
+                <!-- It programmatically triggers the hidden file input's click event -->
+                <button id="select-folder-button">
+                    Select Photo Folder(s)
+                </button>
+
+                <button id="clear-selection">Clear Selection</button>
+                <button id="show-controls">Show Controls Info</button>
+                <button id="show-settings">Settings</button>
+                <div id="loading-indicator" style="display: none">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+            <!-- Photo Preview Modal -->
+            <div id="photo-preview" class="modal" style="display: none">
+                <img id="preview-image" src="" alt="Photo Preview" />
+                <div id="metadata-display"></div>
+                <button id="close-preview" class="modal-close-button">
+                    Close
+                </button>
+            </div>
+
+            <!-- Controls Info Modal -->
+            <div id="controls-info" class="modal" style="display: none">
+                <h2>Navigation Controls</h2>
+                <div id="controls-info-text">
+                    <!-- Control instructions will be populated here -->
+                </div>
+                <button id="close-controls" class="modal-close-button">
+                    Close
+                </button>
+            </div>
+
+            <!-- Settings Modal -->
+            <div id="settings-modal" class="modal" style="display: none">
+                <h2>Settings</h2>
+                <div id="settings-content">
+                    <h3>Visualization Mode</h3>
+                    <div id="visualization-mode-options">
+                        <input
+                            type="radio"
+                            id="mode-spherical"
+                            name="visualization-mode"
+                            value="spherical"
+                            checked
+                        />
+                        <label for="mode-spherical">Spherical (Timeline)</label
+                        ><br />
+
+                        <input
+                            type="radio"
+                            id="mode-cubic"
+                            name="visualization-mode"
+                            value="cubic"
+                        />
+                        <label for="mode-cubic">Cubic (Placeholder)</label
+                        ><br />
+                        <!-- Add more modes here later -->
+                    </div>
+                </div>
+                <button id="close-settings" class="modal-close-button">
+                    Close
+                </button>
+            </div>
+        </div>
+
+    </body>
+</html>
