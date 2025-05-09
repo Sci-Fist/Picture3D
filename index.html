@@ -5,7 +5,8 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="style.css" />
-        <link rel="icon" href="/favicon.png" type="image/png" />
+        <!-- FIX: Changed href to use a relative path -->
+        <link rel="icon" href="./favicon.png" type="image/png" />
     </head>
     <body>
         <div id="app-container">
@@ -33,10 +34,12 @@
 
         <!-- Load the ExifReader library globally -->
         <!-- Your metadataParser seems to use the global 'ExifReader' -->
+        <!-- Keep this line as it loads a global script, not a module -->
         <script src="./js/lib/exifreader.js"></script>
 
         <!-- Your application's entry point loaded as a module -->
-        <!-- main.js and the modules it imports will handle Three.js imports -->
+        <!-- main.js and the modules it imports will handle Three.js imports from CDN -->
+        <!-- FIX: Removed the script tag loading js/lib/three.core.js -->
         <script type="module" src="main.js"></script>
     </body>
 </html>
