@@ -1,6 +1,6 @@
 // js\metadataParser.js
 
-// Fix: Removed import statement.
+// Removed import statement.
 // Based on repeated SyntaxErrors and the library's source, the library './lib/exifreader.js'
 // does not use standard ES Module exports. It is expected to be included
 // via a <script> tag and exposes a global variable, most likely named 'ExifReader'.
@@ -10,13 +10,32 @@ class MetadataParser {
     try {
       const buffer = await file.arrayBuffer();
 
+      // --- Critical Debugging Logs ---
+      // Log the state of the global ExifReader BEFORE checking it
+      console.log("Debugging ExifReader availability:");
+      console.log("typeof window.ExifReader:", typeof window.ExifReader);
+      if (typeof window.ExifReader !== "undefined") {
+        console.log(
+          "window.ExifReader exists. Type:",
+          typeof window.ExifReader,
+        );
+        console.log("window.ExifReader:", window.ExifReader); // Log the actual object
+        console.log(
+          "typeof window.ExifReader.load:",
+          typeof window.ExifReader.load,
+        );
+      } else {
+        console.log("window.ExifReader is undefined.");
+      }
+      console.log("--- End Debugging Logs ---");
+
       // --- Critical Check ---
       // Verify that the global 'ExifReader' variable exists and has a 'load' function.
       // This confirms the library script was loaded correctly via a <script> tag.
       // If this check fails, the issue is with loading the exifreader.js script.
       if (
-        typeof ExifReader === "undefined" ||
-        typeof ExifReader.load !== "function"
+        typeof ExifReader === "undefined" || // Checks if the global variable exists
+        typeof ExifReader.load !== "function" // Checks if the 'load' property is a function
       ) {
         console.error(
           "ExifReader library not loaded or 'load' function not found.",
