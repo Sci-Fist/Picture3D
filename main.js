@@ -1,6 +1,4 @@
 // js/main.js
-// CORRECTED: Pass correct arguments to VisualizationManager methods
-
 import { ThreeSceneManager } from "./js/threeSceneManager.js";
 import { UIHandler } from "./js/uiHandler.js";
 import { FileLoader } from "./js/fileLoader.js";
@@ -208,7 +206,6 @@ threeSceneManager.onPhotoInteractionEnd = () => {
   }
 };
 
-// Corrected: Receive photoMesh as the second argument
 threeSceneManager.onPhotoLongPressRelease = (photoMetadata, photoMesh) => {
   console.log(
     "main.js: Received Long Press Release on photo:",
@@ -227,7 +224,6 @@ threeSceneManager.onPhotoLongPressRelease = (photoMetadata, photoMesh) => {
   }
 };
 
-// Corrected: Receive photoMesh as the third argument
 threeSceneManager.onPhotoSwipe = (photoMetadata, swipeVector, photoMesh) => {
   console.log(
     "main.js: Received Swipe on photo:",
@@ -249,27 +245,26 @@ threeSceneManager.onPhotoSwipe = (photoMetadata, swipeVector, photoMesh) => {
       console.log(
         "main.js: Detected vertical swipe on stacked photo. Triggering stack scroll.",
       );
-      // Call scrollStack, passing photoMetadata, swipeVector.y, photoMesh, AND threeSceneManager
       visualizationManager.scrollStack(
         photoMetadata,
         swipeVector.y,
         photoMesh,
-        threeSceneManager, // Pass the sceneManager instance here
-      );
+        threeSceneManager,
+      ); // Pass all arguments
     } else {
       console.log(
         "main.js: Detected non-vertical swipe on stacked photo. Treating as throw.",
       );
-      // Fallback to throw logic for non-vertical swipes on stacks, passing all required arguments
+      // Fallback to throw logic for non-vertical swipes on stacks
       visualizationManager.swipePhoto(
         photoMetadata,
         swipeVector,
         photoMesh,
-        threeSceneManager, // Pass the sceneManager instance here
-      );
+        threeSceneManager,
+      ); // Pass all arguments
     }
   } else {
-    // If not on a stack, it's always a throw, passing all required arguments
+    // If not on a stack, it's always a throw
     console.log(
       "main.js: Detected swipe on non-stacked photo. Treating as throw.",
     );
@@ -277,8 +272,8 @@ threeSceneManager.onPhotoSwipe = (photoMetadata, swipeVector, photoMesh) => {
       photoMetadata,
       swipeVector,
       photoMesh,
-      threeSceneManager, // Pass the sceneManager instance here
-    );
+      threeSceneManager,
+    ); // Pass all arguments
   }
 };
 

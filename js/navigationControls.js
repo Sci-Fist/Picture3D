@@ -1,7 +1,6 @@
 // js/navigationControls.js
 
 // Import the OrbitControls class from the installed 'three' package
-// Vite will find this in node_modules/three/examples/jsm/controls/OrbitControls.js
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export class NavigationControls {

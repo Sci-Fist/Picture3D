@@ -306,6 +306,7 @@ export class VisualizationManager {
 
   // Handle Swiping a Photo (Placeholder)
   swipePhoto(photoMetadata, swipeVector, photoMesh, sceneManager) {
+    // <-- Correctly expects sceneManager
     console.log(
       "VisualizationManager: Handling swipe (THROW Placeholder) for",
       photoMetadata.name,
@@ -356,6 +357,7 @@ export class VisualizationManager {
 
   // Handle Vertical Swipe for Stack Scrolling (Placeholder)
   scrollStack(stackAnchorPhotoMetadata, swipeVectorY, photoMesh, sceneManager) {
+    // <-- Correctly expects sceneManager
     console.log(
       "VisualizationManager: Handling stack scroll (PLACEHOLDER) for",
       stackAnchorPhotoMetadata.name,

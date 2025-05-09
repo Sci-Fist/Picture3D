@@ -143,7 +143,7 @@ export class ThreeSceneManager {
   onPointerUp(event) {
     // Only process gestures on primary button up (usually left mouse)
     if (event.isPrimary === false || event.button !== 0) {
-      // If OrbitControls was disabled for interaction start (e.g. on left down), re-enable it now
+      // If OrbitControls was disabled for interaction start, re-enable it now
       if (typeof this.onPhotoInteractionEnd === "function") {
         this.onPhotoInteractionEnd();
       }
@@ -448,7 +448,7 @@ export class ThreeSceneManager {
 
     const rect = canvas.getBoundingClientRect();
     this.pointer.x = ((pointerX - rect.left) / rect.width) * 2 - 1;
-    this.pointer.y = -((pointerY - rect.top) / rect.height) * 2 + 1;
+    this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1; // Make sure event.clientY is used
 
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const intersectableObjects = Array.from(this.photoObjects.values());
@@ -482,8 +482,6 @@ export class ThreeSceneManager {
       const elapsed = performance.now() - startTime;
       const t = Math.min(elapsed / duration, 1); // Animation progress (0 to 1)
 
-      // Simple easing function (ease-out)
-      // const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // Old easing
       // Smoothstep easing function (provides smoother start and end)
       const easedT = t * t * (3 - 2 * t);
 
