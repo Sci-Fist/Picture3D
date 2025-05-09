@@ -31,17 +31,12 @@
             </div>
         </div>
 
-        <!-- 1. Load the ExifReader library -->
-        <!-- This makes the global 'ExifReader' variable available -->
-        <!-- Keep this for now as your metadataParser seems to use the global -->
+        <!-- Load the ExifReader library globally -->
+        <!-- Your metadataParser seems to use the global 'ExifReader' -->
         <script src="./js/lib/exifreader.js"></script>
 
-        <!-- REMOVE these global script tags -->
-        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script> -->
-        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/examples/js/controls/OrbitControls.js"></script> -->
-
-        <!-- 2. Load your application scripts as modules -->
-        <!-- These modules will now import Three.js and OrbitControls directly -->
+        <!-- Your application's entry point loaded as a module -->
+        <!-- main.js and the modules it imports will handle Three.js imports -->
         <script type="module" src="main.js"></script>
     </body>
 </html>
