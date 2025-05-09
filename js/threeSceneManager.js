@@ -28,7 +28,7 @@ export class ThreeSceneManager {
     // Camera
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     // Apply temporary visibility setting: Start well outside the sphere radius (10)
-    this.camera.position.z = 25; // TEMPORARILY Start well outside the sphere
+    this.camera.position.z = 25; // TEMPORARILY Start well outside the sphere for visibility
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -100,9 +100,9 @@ export class ThreeSceneManager {
 
     // Create a placeholder material while texture loads
     const material = new THREE.MeshBasicMaterial({
-      color: 0x333333, // Dark grey placeholder
+      color: 0x333333,
       side: THREE.DoubleSide,
-    });
+    }); // Dark grey placeholder
     // TEMPORARILY larger size for visibility
     const geometry = new THREE.PlaneGeometry(10, 10); // TEMPORARILY larger size for visibility
 
@@ -134,11 +134,12 @@ export class ThreeSceneManager {
             const aspectRatio = width / height;
             // Scale the plane geometry to match the image aspect ratio while maintaining overall scale
             // We might need a strategy here. Let's scale width based on height=1 for now.
-            // NOTE: The geometry is currently scaled so Height = 1 unit. You might want
-            // to scale it such that the LARGER dimension is 1 or a fixed value.
-            // For now, keeping this as is to just get visibility working.
             photoMesh.geometry.dispose(); // Dispose old geometry
-            photoMesh.geometry = new THREE.PlaneGeometry(aspectRatio, 1); // New geometry with correct aspect ratio
+            photoMesh.geometry = new THREE.PlaneGeometry(aspectRatio * 5, 5); // Revert back to a more reasonable size after testing
+          } else {
+            // If dimensions are unknown, use a default plane size that's visible
+            photoMesh.geometry.dispose(); // Dispose old geometry
+            photoMesh.geometry = new THREE.PlaneGeometry(5, 5); // Use a default visible size
           }
 
           photoMesh.material = new THREE.MeshBasicMaterial({
@@ -147,7 +148,7 @@ export class ThreeSceneManager {
           });
           photoMesh.material.needsUpdate = true; // Ensure material updates
           console.log(`Loaded texture for photo ${photoId}`);
-          // TODO: Apply orientation if needed using photoMetadata.orientation (requires geometry or material transform)
+          // TODO: Apply orientation if needed using photoMetadata.orientation
         } else {
           // Mesh was removed while texture was loading
           texture.dispose();
