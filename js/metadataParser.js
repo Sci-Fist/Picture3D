@@ -1,23 +1,32 @@
+{
+  {
+    REWRITTEN_CODE;
+  }
+}
 // js/metadataParser.js
 
 // Import ExifReader as a module from node_modules
-import * as ExifReader from "exifreader"; // Import everything as a namespace
+// Use the correct package name 'exif-reader' and the default export
+import ExifReader from "exif-reader";
 
 export class MetadataParser {
   constructor() {
     console.log("MetadataParser constructor called");
     // Check if ExifReader is available (now checked via the import)
-    this.isExifReaderAvailable = typeof ExifReader !== "undefined"; // Check the imported variable
+    // Check if the imported module exists and has the 'load' method
+    this.isExifReaderAvailable =
+      typeof ExifReader !== "undefined" &&
+      typeof ExifReader.load === "function";
 
     console.log("Debugging ExifReader availability:");
     console.log("typeof ExifReader:", typeof ExifReader); // Log the imported variable
     if (this.isExifReaderAvailable) {
-      // You can inspect properties of the imported module if needed
       console.log("ExifReader is available.");
       console.log("typeof ExifReader.load:", typeof ExifReader.load);
     } else {
-      // This else block should ideally not be reached if the import succeeds
-      console.error("ExifReader import failed. Metadata parsing will fail.");
+      console.error(
+        "ExifReader import failed or load method is missing. Metadata parsing will fail.",
+      );
     }
     console.log("--- End Debugging Logs ---");
   }
@@ -25,14 +34,14 @@ export class MetadataParser {
   async parseMetadata(file) {
     if (!this.isExifReaderAvailable) {
       console.error(
-        "MetadataParser: ExifReader not loaded. Cannot parse metadata.",
+        "MetadataParser: ExifReader not loaded or load method is missing. Cannot parse metadata.",
       );
       return null;
     }
 
     try {
       // Use the imported ExifReader object
-      const tags = await ExifReader.load(file);
+      const tags = await ExifReader.load(file); // This usage matches the 'import ExifReader from' style
 
       // ... rest of your parseMetadata logic remains the same ...
       const metadata = {
