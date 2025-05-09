@@ -1,35 +1,35 @@
 // js/metadataParser.js
 
-// Import ExifReader as a module from the 'exif-reader' package installed via npm
-// Use the correct package name 'exif-reader' and the default export style
-import ExifReader from "exif-reader";
+// Import exifr as a module from the 'exifr' package installed via npm
+import exifr from "exifr";
 
 export class MetadataParser {
   constructor() {
     console.log("MetadataParser constructor called");
 
-    // Check if ExifReader was imported successfully and is a function
-    this.isExifReaderAvailable = typeof ExifReader === "function";
+    // Check if exifr was imported successfully and has the 'parse' method
+    this.isExifrAvailable =
+      typeof exifr !== "undefined" && typeof exifr.parse === "function";
 
-    console.log("Debugging ExifReader availability:");
-    console.log("typeof ExifReader:", typeof ExifReader); // Log the imported variable itself
-    // Now we check if the imported variable itself is the expected function
-    if (this.isExifReaderAvailable) {
-      console.log("ExifReader is available and is a function.");
+    console.log("Debugging exifr availability:");
+    console.log("typeof exifr:", typeof exifr); // Log the imported variable itself
+    console.log("typeof exifr.parse:", typeof exifr.parse); // Log the type of the parse method
+
+    if (this.isExifrAvailable) {
+      console.log("exifr is available and its parse method is present.");
     } else {
-      // This error should ideally not happen if the import succeeded
       console.error(
-        "MetadataParser: ExifReader was not imported as a function. Metadata parsing will fail.",
+        "MetadataParser: exifr was not imported or its parse method is missing. Metadata parsing will fail.",
       );
     }
     console.log("--- End Debugging Logs ---");
   }
 
   async parseMetadata(file) {
-    // Check before attempting to use ExifReader
-    if (!this.isExifReaderAvailable) {
+    // Check before attempting to use exifr
+    if (!this.isExifrAvailable) {
       console.error(
-        "MetadataParser: ExifReader is not available or not a function. Cannot parse metadata.",
+        "MetadataParser: exifr is not available or not a function. Cannot parse metadata.",
       );
       // Return basic info even if metadata parsing library is missing
       const basicMetadataUnavailable = {
@@ -55,8 +55,7 @@ export class MetadataParser {
       return basicMetadataUnavailable;
     }
 
-    // For safety, ensure we are only trying to parse image files
-    // exif-reader itself will error on non-image data anyway, but this is a good check
+    // For safety, ensure we are only trying to process image files (exifr handles this internally too)
     if (!file.type.startsWith("image/")) {
       console.warn(`MetadataParser: Skipping non-image file: ${file.name}`);
       // Return basic info for non-image files too
@@ -83,171 +82,27 @@ export class MetadataParser {
       return basicMetadataNonImage;
     }
 
-    // Read the file content as an ArrayBuffer (raw binary data)
-    return new Promise((resolve) => {
-      // Wrap the file reading in a Promise
-      const reader = new FileReader();
+    try {
+      // Use exifr.parse() with the File object directly.
+      // Request specific segments to parse for better performance/control.
+      // parse: true tells exifr to parse known tags into friendly names/formats.
+      const tags = await exifr.parse(file, {
+        exif: true,
+        gps: true,
+        xmp: true,
+        iptc: true,
+        png: true, // Include PNG-specific metadata segments
+        parse: true, // Parse known tags
+        // Add other segments if needed, e.g., icc: true, photoshop: true
+      });
 
-      reader.onload = async (event) => {
-        // Use async here because ExifReader might return a Promise
-        try {
-          const arrayBuffer = event.target.result;
-          // Create a DataView from the ArrayBuffer
-          const dataView = new DataView(arrayBuffer);
-
-          // Pass the DataView (raw bytes) to the ExifReader function
-          // Await the result, as exif-reader can sometimes return a Promise
-          const tags = await ExifReader(dataView);
-
-          // --- Extracting specific metadata ---
-          // (Keep the extraction logic as it was, it seems correct for the tags structure)
-          const metadata = {
-            name: file.webkitRelativePath || file.name,
-            size: file.size,
-            type: file.type,
-            lastModified: new Date(file.lastModified),
-            src: URL.createObjectURL(file),
-
-            date: null,
-            gps: null,
-            make: null,
-            model: null,
-            imageWidth: null,
-            imageHeight: null,
-            orientation: null,
-            exposureTime: null,
-            fNumber: null,
-            isoSpeedRatings: null,
-            focalLength: null,
-            lensModel: null,
-
-            revokeObjectURL: () => {
-              if (metadata.src) {
-                URL.revokeObjectURL(metadata.src);
-                metadata.src = null;
-              }
-            },
-          };
-
-          const getTagDescription = (tagsGroup, tagName) =>
-            tagsGroup?.[tagName]?.description ?? null;
-          const getTagRawValue = (tagsGroup, tagName) =>
-            tagsGroup?.[tagName]?.value ?? null;
-
-          metadata.make =
-            getTagDescription(tags.Image, "Make") ||
-            getTagDescription(tags.Photo, "LensMake");
-          metadata.model =
-            getTagDescription(tags.Image, "Model") ||
-            getTagDescription(tags.Photo, "LensModel");
-
-          metadata.imageWidth =
-            getTagRawValue(tags.Photo, "PixelXDimension") ||
-            getTagRawValue(tags.Image, "ImageWidth");
-          metadata.imageHeight =
-            getTagRawValue(tags.Photo, "PixelYDimension") ||
-            getTagRawValue(tags.Image, "ImageLength");
-
-          metadata.orientation = getTagRawValue(tags.Image, "Orientation");
-
-          metadata.exposureTime = getTagDescription(tags.Photo, "ExposureTime");
-          metadata.fNumber = getTagDescription(tags.Photo, "FNumber");
-          metadata.isoSpeedRatings = getTagRawValue(
-            tags.Photo,
-            "ISOSpeedRatings",
-          );
-          metadata.focalLength = getTagDescription(tags.Photo, "FocalLength");
-          metadata.lensModel = getTagDescription(tags.Photo, "LensModel");
-
-          metadata.date =
-            getTagRawValue(tags.Photo, "DateTimeOriginal") ||
-            getTagRawValue(tags.Photo, "DateTimeDigitized") ||
-            getTagRawValue(tags.Image, "DateTime");
-
-          if (
-            !metadata.date ||
-            !(metadata.date instanceof Date) ||
-            isNaN(metadata.date.getTime())
-          ) {
-            metadata.date = new Date(file.lastModified);
-            // Only warn if there was EXIF data but no valid date tags
-            if (Object.keys(tags).length > 0) {
-              console.warn(
-                `MetadataParser: Could not find/parse EXIF date tags for ${file.name}. Using file modification date.`,
-              );
-            } else {
-              // No EXIF data at all
-              console.warn(
-                `MetadataParser: No EXIF data found for ${file.name}. Using file modification date.`,
-              );
-            }
-          }
-
-          if (
-            tags.gps &&
-            typeof tags.gps.Latitude === "number" &&
-            typeof tags.gps.Longitude === "number"
-          ) {
-            metadata.gps = {
-              latitude: tags.gps.Latitude,
-              longitude: tags.gps.Longitude,
-              altitude: getTagRawValue(tags.gps, "GPSAltitude"),
-              latitudeDescription: getTagDescription(
-                tags.GPSInfo,
-                "GPSLatitude",
-              ),
-              longitudeDescription: getTagDescription(
-                tags.GPSInfo,
-                "GPSLongitude",
-              ),
-              altitudeDescription: getTagDescription(
-                tags.GPSInfo,
-                "GPSAltitude",
-              ),
-            };
-          }
-
-          // Resolve the promise with the complete metadata object
-          resolve(metadata);
-        } catch (error) {
-          // Catch errors during ExifReader call or metadata extraction
-          console.error(
-            `MetadataParser: Failed to process metadata for ${file.name}:`,
-            error,
-          );
-          // Return basic info even if detailed metadata parsing fails
-          const basicMetadataError = {
-            name: file.webkitRelativePath || file.name,
-            size: file.size,
-            type: file.type,
-            lastModified: new Date(file.lastModified),
-            src: URL.createObjectURL(file),
-            date: new Date(file.lastModified), // Fallback date
-            gps: null,
-            make: null,
-            model: null,
-            imageWidth: null,
-            imageHeight: null,
-            orientation: null,
-            revokeObjectURL: () => {
-              if (basicMetadataError.src) {
-                URL.revokeObjectURL(basicMetadataError.src);
-                basicMetadataError.src = null;
-              }
-            },
-          };
-          // Resolve the promise with the basic metadata
-          resolve(basicMetadataError);
-        }
-      };
-
-      reader.onerror = (event) => {
-        console.error(
-          `MetadataParser: Error reading file ${file.name} with FileReader:`,
-          event.target.error,
+      // exifr.parse() returns undefined if no metadata is found or if file type isn't supported
+      if (!tags) {
+        console.warn(
+          `MetadataParser: No parsable metadata found for ${file.name}.`,
         );
-        // Return basic info if FileReader fails
-        const basicMetadataFileReaderError = {
+        // Return basic info if no metadata is found
+        const basicMetadataNoTags = {
           name: file.webkitRelativePath || file.name,
           size: file.size,
           type: file.type,
@@ -261,18 +116,186 @@ export class MetadataParser {
           imageHeight: null,
           orientation: null,
           revokeObjectURL: () => {
-            if (basicMetadataFileReaderError.src) {
-              URL.revokeObjectURL(basicMetadataFileReaderError.src);
-              basicMetadataFileReaderError.src = null;
+            if (basicMetadataNoTags.src) {
+              URL.revokeObjectURL(basicMetadataNoTags.src);
+              basicMetadataNoTags.src = null;
             }
           },
         };
-        // Resolve the promise with the basic metadata
-        resolve(basicMetadataFileReaderError);
+        return basicMetadataNoTags;
+      }
+
+      // --- Extracting specific metadata from exifr's output structure ---
+      // exifr often returns a flat object or an object with segment names (exif, gps, xmp etc.)
+      // Let's adapt the extraction to look in common places exifr puts data.
+
+      // Helper to safely get a tag value from potentially nested structures
+      const getExifrTag = (tagsObj, ...path) => {
+        let current = tagsObj;
+        for (const key of path) {
+          if (
+            current === null ||
+            typeof current !== "object" ||
+            !(key in current)
+          ) {
+            return null; // Path doesn't exist
+          }
+          current = current[key];
+        }
+        return current; // Return the value found at the end of the path
       };
 
-      // Start reading the file content as an ArrayBuffer
-      reader.readAsArrayBuffer(file);
-    });
+      const metadata = {
+        name: file.webkitRelativePath || file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: new Date(file.lastModified), // File object provides this
+        src: URL.createObjectURL(file), // Create a temporary URL for displaying
+
+        // Initialize potential metadata fields
+        date: null,
+        gps: null,
+        make: null,
+        model: null,
+        imageWidth: null,
+        imageHeight: null,
+        orientation: null,
+        exposureTime: null,
+        fNumber: null,
+        isoSpeedRatings: null,
+        focalLength: null,
+        lensModel: null,
+
+        // Add a method to revoke the temporary URL when done
+        revokeObjectURL: () => {
+          if (metadata.src) {
+            URL.revokeObjectURL(metadata.src);
+            metadata.src = null; // Clear the reference
+          }
+        },
+      };
+
+      // --- Extracting data using the getExifrTag helper ---
+
+      // Basic camera info (often in Image or Exif segment)
+      metadata.make =
+        getExifrTag(tags, "make") || getExifrTag(tags, "exif", "Make"); // exifr often puts common tags at the top level
+      metadata.model =
+        getExifrTag(tags, "model") || getExifrTag(tags, "exif", "Model");
+
+      // Image dimensions (often in Image or Exif segment)
+      // exifr might put these at the top level or in the exif segment
+      metadata.imageWidth =
+        getExifrTag(tags, "imageWidth") ||
+        getExifrTag(tags, "exif", "PixelXDimension") ||
+        getExifrTag(tags, "exif", "ImageWidth");
+      metadata.imageHeight =
+        getExifrTag(tags, "imageHeight") ||
+        getExifrTag(tags, "exif", "PixelYDimension") ||
+        getExifrTag(tags, "exif", "ImageLength");
+
+      // Orientation (often in Image segment)
+      metadata.orientation =
+        getExifrTag(tags, "orientation") ||
+        getExifrTag(tags, "exif", "Orientation");
+
+      // Photo settings (often in Photo or Exif segment)
+      metadata.exposureTime =
+        getExifrTag(tags, "exposureTime") ||
+        getExifrTag(tags, "exif", "ExposureTime");
+      metadata.fNumber =
+        getExifrTag(tags, "fNumber") || getExifrTag(tags, "exif", "FNumber");
+      metadata.isoSpeedRatings =
+        getExifrTag(tags, "iso") ||
+        getExifrTag(tags, "exif", "ISOSpeedRatings");
+      metadata.focalLength =
+        getExifrTag(tags, "focalLength") ||
+        getExifrTag(tags, "exif", "FocalLength");
+      metadata.lensModel =
+        getExifrTag(tags, "lensModel") ||
+        getExifrTag(tags, "exif", "LensModel");
+
+      // Date/Time (often in Exif segment)
+      // exifr parses these into Date objects automatically with parse: true
+      metadata.date =
+        getExifrTag(tags, "dateOriginal") ||
+        getExifrTag(tags, "dateDigitized") ||
+        getExifrTag(tags, "dateTimeOriginal") ||
+        getExifrTag(tags, "dateTimeDigitized") ||
+        getExifrTag(tags, "exif", "DateTimeOriginal") ||
+        getExifrTag(tags, "exif", "DateTimeDigitized") ||
+        getExifrTag(tags, "exif", "DateTime");
+
+      // Fallback to file modified date if no EXIF date is found or if it's invalid
+      if (
+        !metadata.date ||
+        !(metadata.date instanceof Date) ||
+        isNaN(metadata.date.getTime())
+      ) {
+        metadata.date = new Date(file.lastModified);
+        // Only warn if exifr returned tags but no valid date tags were found
+        if (Object.keys(tags).length > 0) {
+          console.warn(
+            `MetadataParser: Could not find/parse EXIF date tags for ${file.name} using exifr. Using file modification date.`,
+          );
+        } else {
+          // This case should be covered by the !tags check earlier, but kept for safety
+          console.warn(
+            `MetadataParser: No metadata found for ${file.name} using exifr. Using file modification date.`,
+          );
+        }
+      }
+
+      // GPS data (often in GPS segment)
+      // exifr puts parsed lat/lon directly on the tags.gps object with parse: true
+      if (
+        tags.gps &&
+        typeof tags.gps.latitude === "number" &&
+        typeof tags.gps.longitude === "number"
+      ) {
+        metadata.gps = {
+          latitude: tags.gps.latitude, // Already a number
+          longitude: tags.gps.longitude, // Already a number
+          altitude: tags.gps.altitude || null, // Should also be a number if present
+          // Keep descriptions if exifr provides them and you need them for display
+          latitudeDescription: tags.gps.GPSLatitude || null, // Raw/formatted string description might be here
+          longitudeDescription: tags.gps.GPSLongitude || null, // Raw/formatted string description might be here
+          altitudeDescription: tags.gps.GPSAltitude || null, // Raw/formatted string description might be here
+        };
+        // exifr handles refs (N/S/E/W) in its numerical parsing.
+      }
+
+      // Return the compiled metadata object
+      return metadata;
+    } catch (error) {
+      // Catch any errors during exifr.parse or subsequent extraction
+      console.error(
+        `MetadataParser: Failed to process metadata for ${file.name} using exifr:`,
+        error,
+      );
+      // Return basic info even if detailed metadata parsing fails
+      const basicMetadataError = {
+        name: file.webkitRelativePath || file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: new Date(file.lastModified),
+        src: URL.createObjectURL(file),
+        date: new Date(file.lastModified), // Fallback date
+        gps: null,
+        make: null,
+        model: null,
+        imageWidth: null,
+        imageHeight: null,
+        orientation: null,
+        revokeObjectURL: () => {
+          if (basicMetadataError.src) {
+            URL.revokeObjectURL(basicMetadataError.src);
+            basicMetadataError.src = null;
+          }
+        },
+      };
+      // Resolve the promise with the basic metadata
+      return basicMetadataError; // Note: No need to wrap in Promise as catch in async fn returns a resolved Promise
+    }
   }
 }
