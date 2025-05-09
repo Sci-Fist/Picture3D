@@ -13,12 +13,15 @@ body {
 
 /* Make the app-container cover the entire viewport */
 #app-container {
-    position: relative; /* Or fixed */
+    position: relative; /* Children absolute positions are relative to this */
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100vw; /* Explicitly use viewport units */
+    height: 100vh; /* Explicitly use viewport units */
+    /* Ensure it's a block element if body is not flex */
+    display: block;
 }
+
 
 /* Make #3d-container fill its parent (#app-container) */
 #3d-container {
@@ -28,6 +31,7 @@ body {
     width: 100%; /* Fill 100% of parent width */
     height: 100%; /* Fill 100% of parent height */
     z-index: 1; /* Ensure it's below modals and UI overlays */
+    display: block; /* Ensure it's a block element */
 }
 
 /* Style for the Three.js canvas - ensure it fills its container */
@@ -58,6 +62,7 @@ body {
     transform: translateY(-100%);
 }
 
+
 /* --- Toggle Controls Button --- */
 #toggle-controls {
     position: absolute; /* Position relative to the parent #app-container */
@@ -83,39 +88,41 @@ body {
 
 /* Style for the hidden file input - ENSURE THIS IS HIDING IT ROBUSTLY */
 #folder-selector {
-    /* Combined multiple hiding techniques and !important */
-    display: block !important; /* Ensure it's a block element for positioning */
-    position: absolute !important; /* Position it absolutely */
-    top: -9999px !important; /* Move it far off-screen */
-    left: -9999px !important; /* Move it far off-screen */
-    width: 1px !important; /* Give it a minimal size */
-    height: 1px !important; /* Give it a minimal size */
-    padding: 0 !important; /* Remove padding */
-    border: 0 !important; /* Remove border */
-    margin: 0 !important; /* Remove margin */
-    opacity: 0 !important; /* Make it fully transparent */
-    pointer-events: none !important; /* Prevent all mouse/touch events */
-    z-index: -1 !important; /* Ensure it's behind everything */
-    overflow: hidden !important; /* Hide any overflow content/text */
-    visibility: hidden !important; /* Explicitly hide it */
+    /* Use display: none to guarantee it's not rendered visually */
+    display: none !important;
+    /* Redundant properties with display:none, but keep for max robustness */
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    margin: 0 !important;
+    opacity: 0 !important; /* Still good practice */
+    pointer-events: none !important; /* Still good practice */
+    z-index: -1 !important; /* Still good practice */
+    overflow: hidden !important; /* Still good practice */
+    visibility: hidden !important; /* Still good practice */
 }
+
 
 /* Style for the select-folder-button (the visible button) */
 #controls-container button#select-folder-button {
-    background-color: #007bff;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    border: none;
+     background-color: #007bff;
+     color: white;
+     padding: 8px 12px;
+     border-radius: 4px;
+     cursor: pointer;
+     transition: background-color 0.2s ease;
+     border: none;
 }
 #controls-container button#select-folder-button:hover {
-    background-color: #0056b3;
+     background-color: #0056b3;
 }
 
+
 /* Base style for all other buttons in controls-container */
-/* Ensure these styles are applied correctly after the specific button style */
 #controls-container button {
     padding: 8px 12px;
     border: none;
@@ -131,25 +138,21 @@ body {
     background-color: #dc3545;
     color: white;
 }
-#controls-container button#clear-selection:hover {
-    background-color: #c82333;
-}
+#controls-container button#clear-selection:hover { background-color: #c82333; }
+
 
 #controls-container button#show-controls {
-    background-color: #28a745;
-    color: white;
+     background-color: #28a745;
+     color: white;
 }
-#controls-container button#show-controls:hover {
-    background-color: #218838;
-}
+#controls-container button#show-controls:hover { background-color: #218838; }
 
 #controls-container button#show-settings {
-    background-color: #ffc107;
-    color: #212529;
+     background-color: #ffc107;
+     color: #212529;
 }
-#controls-container button#show-settings:hover {
-    background-color: #e0a800;
-}
+#controls-container button#show-settings:hover { background-color: #e0a800; }
+
 
 /* --- Loading Indicator Style --- */
 #loading-indicator {
@@ -162,6 +165,7 @@ body {
 #loading-indicator p {
     margin: 0;
 }
+
 
 /* --- Modal Styling (for photo preview, controls info, settings) --- */
 .modal {
@@ -181,70 +185,31 @@ body {
 }
 
 .modal h2 {
-    margin-top: 0;
-    font-size: 1.2em;
-    color: #fff;
-    text-align: center;
-    margin-bottom: 15px;
+     margin-top: 0; font-size: 1.2em; color: #fff; text-align: center; margin-bottom: 15px;
 }
 
 /* --- Specific Modal Content Styles --- */
 #photo-preview #preview-image {
-    display: block;
-    margin: 0 auto 15px auto;
-    max-width: 100%;
-    max-height: 70vh;
-    object-fit: contain;
+    display: block; margin: 0 auto 15px auto; max-width: 100%; max-height: 70vh; object-fit: contain;
 }
 
 #photo-preview #metadata-display {
-    white-space: pre-wrap;
-    font-size: 0.9em;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #444;
+    white-space: pre-wrap; font-size: 0.9em; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #444;
 }
 
 #controls-info-text {
-    white-space: pre-wrap;
-    font-size: 1em;
-    line-height: 1.5;
-    margin-bottom: 20px;
+    white-space: pre-wrap; font-size: 1em; line-height: 1.5; margin-bottom: 20px;
 }
 
-#settings-modal #settings-content {
-    margin-bottom: 20px;
-}
+#settings-modal #settings-content { margin-bottom: 20px; }
 
 #settings-modal #settings-content h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    color: #fff;
-    font-size: 1.1em;
-    border-bottom: 1px solid #555;
-    padding-bottom: 5px;
+    margin-top: 0; margin-bottom: 10px; color: #fff; font-size: 1.1em; border-bottom: 1px solid #555; padding-bottom: 5px;
 }
 
-#settings-modal #visualization-mode-options label {
-    margin-left: 5px;
-    cursor: pointer;
-}
-#settings-modal #visualization-mode-options input[type="radio"] {
-    cursor: pointer;
-}
+#settings-modal #visualization-mode-options label { margin-left: 5px; cursor: pointer; }
+#settings-modal #visualization-mode-options input[type="radio"] { cursor: pointer; }
 
 /* --- Common Modal Close Button Style --- */
 .modal-close-button {
-    display: block;
-    margin: 0 auto;
-    padding: 8px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-.modal-close-button:hover {
-    background-color: #0056b3;
-}
+    display: block; margin: 0 auto; padding: 8px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;

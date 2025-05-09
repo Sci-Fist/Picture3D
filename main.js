@@ -1,4 +1,6 @@
 // js/main.js
+// CORRECTED: Pass correct arguments to VisualizationManager methods
+
 import { ThreeSceneManager } from "./js/threeSceneManager.js";
 import { UIHandler } from "./js/uiHandler.js";
 import { FileLoader } from "./js/fileLoader.js";
@@ -13,6 +15,10 @@ if (!container) {
   console.error("FATAL ERROR: 3D container element #3d-container not found!");
 } else {
   threeSceneManager.init(container);
+  // Call onWindowResize explicitly here
+  // This ensures the renderer and camera are sized based on the container's
+  // computed size immediately after init and the DOM is ready.
+  threeSceneManager.onWindowResize();
 }
 
 // Set up UI
@@ -35,8 +41,8 @@ const controlsElement = threeSceneManager.getRenderer()
 
 const navigationControls = new NavigationControls();
 // Ensure camera and controlsElement (the canvas) are valid before initializing controls
-// The threeSceneManager.init now calls onWindowResize at the end,
-// so renderer.domElement should be available immediately after threeSceneManager.init completes.
+// The threeSceneManager.init and subsequent onWindowResize call should ensure
+// renderer.domElement is available here.
 if (camera && controlsElement) {
   navigationControls.init(camera, controlsElement);
 } else {
@@ -145,7 +151,10 @@ Right Mouse Button + Drag: Pan View (Move sideways)
 Mouse Wheel: Zoom In/Out
 
 Click Photo: Show Preview
-`;
+Long Press & Release Photo: Spread Stack
+Swipe Photo: Throw Photo (Placeholder)
+Vertical Swipe on Stack: Scroll Stack (Placeholder)
+`; // Updated info text
 
 // Bind the show controls button
 uiHandler.bindShowControlsButton(() => {
@@ -180,6 +189,105 @@ uiHandler.bindToggleControlsButton(() => {
   // you would add logic here or pass a callback to uiHandler.bindToggleControlsButton
   // For now, OrbitControls stays active regardless of overlay visibility.
 });
+
+// *** Bind interaction callbacks from ThreeSceneManager ***
+// These functions are called by ThreeSceneManager when a gesture is detected on a photo
+threeSceneManager.onPhotoInteractionStart = () => {
+  // Optional: Disable OrbitControls when the user starts interacting directly with a photo
+  if (navigationControls.getControls()) {
+    navigationControls.getControls().enabled = false;
+    console.log("main.js: Disabled OrbitControls for photo interaction.");
+  }
+};
+
+threeSceneManager.onPhotoInteractionEnd = () => {
+  // Re-enable OrbitControls when the user stops interacting with a photo
+  if (navigationControls.getControls()) {
+    navigationControls.getControls().enabled = true;
+    console.log("main.js: Enabled OrbitControls after photo interaction.");
+  }
+};
+
+// Corrected: Receive photoMesh as the second argument
+threeSceneManager.onPhotoLongPressRelease = (photoMetadata, photoMesh) => {
+  console.log(
+    "main.js: Received Long Press Release on photo:",
+    photoMetadata.name,
+  );
+  // Check if this photo is part of a stack before trying to spread
+  if (photoMesh && photoMesh.userData.isStacked) {
+    // Trigger the visualization manager to spread the stack, passing the sceneManager
+    visualizationManager.spreadStack(photoMetadata, threeSceneManager);
+  } else {
+    console.log(
+      "main.js: Long Press Release on non-stacked photo.",
+      photoMetadata.name,
+    );
+    // Optional: Handle long press on a single photo (e.g., show larger preview with more info)
+  }
+};
+
+// Corrected: Receive photoMesh as the third argument
+threeSceneManager.onPhotoSwipe = (photoMetadata, swipeVector, photoMesh) => {
+  console.log(
+    "main.js: Received Swipe on photo:",
+    photoMetadata.name,
+    "Vector:",
+    swipeVector.x,
+    swipeVector.y,
+  );
+
+  // Check swipe direction to differentiate throw vs stack scroll (if on a stack)
+  if (photoMesh && photoMesh.userData.isStacked) {
+    // If on a stack, check if it's a vertical swipe for scrolling
+    const verticalThreshold = 0.8; // require swipe to be mostly vertical (e.g., > 80% vertical)
+    const swipeDirectionNormalized = swipeVector.clone().normalize();
+    // Use dot product with up vector (0, 1) for screen space Y axis
+    const verticality = Math.abs(swipeDirectionNormalized.y);
+
+    if (verticality > verticalThreshold) {
+      console.log(
+        "main.js: Detected vertical swipe on stacked photo. Triggering stack scroll.",
+      );
+      // Call scrollStack, passing photoMetadata, swipeVector.y, photoMesh, AND threeSceneManager
+      visualizationManager.scrollStack(
+        photoMetadata,
+        swipeVector.y,
+        photoMesh,
+        threeSceneManager, // Pass the sceneManager instance here
+      );
+    } else {
+      console.log(
+        "main.js: Detected non-vertical swipe on stacked photo. Treating as throw.",
+      );
+      // Fallback to throw logic for non-vertical swipes on stacks, passing all required arguments
+      visualizationManager.swipePhoto(
+        photoMetadata,
+        swipeVector,
+        photoMesh,
+        threeSceneManager, // Pass the sceneManager instance here
+      );
+    }
+  } else {
+    // If not on a stack, it's always a throw, passing all required arguments
+    console.log(
+      "main.js: Detected swipe on non-stacked photo. Treating as throw.",
+    );
+    visualizationManager.swipePhoto(
+      photoMetadata,
+      swipeVector,
+      photoMesh,
+      threeSceneManager, // Pass the sceneManager instance here
+    );
+  }
+};
+
+// This callback is triggered by ThreeSceneManager on a detected click
+threeSceneManager.onPhotoClick = (photoMetadata) => {
+  console.log("main.js: Received Click on photo:", photoMetadata.name);
+  // Trigger the UI to show the preview
+  uiHandler.showPreview(photoMetadata);
+};
 
 // Animation loop
 function animate() {
