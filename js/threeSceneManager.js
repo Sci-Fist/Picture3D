@@ -253,8 +253,3 @@ export class ThreeSceneManager {
     }
   }
 }
-{
-  {
-    REWRITTEN_CODE;
-  }
-}
