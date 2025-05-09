@@ -58,7 +58,7 @@ export class VisualizationManager {
     // we add a small offset based on its unique ID. This assumes the photos in the array are somewhat ordered.
     // A more robust approach might involve grouping by date first.
     // For simplicity now, let's add a small offset based on the unique ID.
-    const spacingOffset = id * 0.001; // Small offset based on unique ID (adjust value as needed)
+    const spacingOffset = id * 0.5; // <-- Increased significantly for testing
 
     // Add the offset to both theta and phi to create a spiral or distributed effect for identical dates
     theta += spacingOffset;
@@ -86,7 +86,10 @@ export class VisualizationManager {
     dummy.lookAt(lookAtVector);
     const rotation = dummy.rotation.clone();
 
-    // console.log(`Calculated position for ${photoId} (Date: ${date.toISOString() || 'N/A'}):`, position); // Log positions for debugging
+    console.log(
+      `Calculated position for ${photoId} (ID: ${id}, Date: ${date ? date.toISOString() || "Invalid Date" : "N/A"}):`,
+      position.toArray(),
+    ); // Log positions for debugging
     return { position, rotation };
   }
 
