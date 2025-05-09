@@ -28,7 +28,7 @@ export class ThreeSceneManager {
     // Camera
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     // Apply temporary visibility setting: Start well outside the sphere radius (10)
-    this.camera.position.z = 25; // Or a higher value like 30 if needed
+    this.camera.position.z = 25; // TEMPORARILY Start well outside the sphere
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
