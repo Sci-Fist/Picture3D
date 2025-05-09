@@ -27,8 +27,8 @@ export class ThreeSceneManager {
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    // >> TEMPORARY VISIBILITY SETTING: Start well outside the sphere
-    this.camera.position.z = 25; // Changed from 5 to 25
+    // Apply temporary visibility setting: Start well outside the sphere radius (10)
+    this.camera.position.z = 25; // Or a higher value like 30 if needed
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -103,8 +103,8 @@ export class ThreeSceneManager {
       color: 0x333333, // Dark grey placeholder
       side: THREE.DoubleSide,
     });
-    // >> TEMPORARY VISIBILITY SETTING: Make the initial plane much larger
-    const geometry = new THREE.PlaneGeometry(10, 10); // Changed from 1, 1 to 10, 10
+    // TEMPORARILY larger size for visibility
+    const geometry = new THREE.PlaneGeometry(10, 10); // TEMPORARILY larger size for visibility
 
     const photoMesh = new THREE.Mesh(geometry, material);
     photoMesh.position.copy(position);

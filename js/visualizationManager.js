@@ -58,8 +58,7 @@ export class VisualizationManager {
     // we add a small offset based on its unique ID. This assumes the photos in the array are somewhat ordered.
     // A more robust approach might involve grouping by date first.
     // For simplicity now, let's add a small offset based on the unique ID.
-    // >> TEMPORARY VISIBILITY SETTING: Increased significantly for testing
-    const spacingOffset = id * 0.5; // Changed from 0.001 to 0.5
+    const spacingOffset = id * 0.5; // TEMPORARILY Increased significantly for testing
 
     // Add the offset to both theta and phi to create a spiral or distributed effect for identical dates
     theta += spacingOffset;
