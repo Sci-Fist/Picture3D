@@ -28,7 +28,7 @@ export class ThreeSceneManager {
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    this.camera.position.z = 20; // Start further away from the center (radius is 10)
+    this.camera.position.z = 25; // Start well outside the sphere (radius is 10)
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -103,7 +103,7 @@ export class ThreeSceneManager {
       color: 0x333333,
       side: THREE.DoubleSide,
     }); // Dark grey placeholder
-    const geometry = new THREE.PlaneGeometry(1, 1); // Default size
+    const geometry = new THREE.PlaneGeometry(5, 5); // <-- TEMPORARILY larger size for visibility
 
     const photoMesh = new THREE.Mesh(geometry, material);
     photoMesh.position.copy(position);
